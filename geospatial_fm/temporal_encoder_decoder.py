@@ -34,6 +34,8 @@ class TemporalEncoderDecoder(EncoderDecoder):
                  pretrained=None,
                  init_cfg=None,
                  frozen_backbone=False):
+
+
         super(EncoderDecoder, self).__init__(init_cfg)
         if pretrained is not None:
             assert backbone.get('pretrained') is None, \

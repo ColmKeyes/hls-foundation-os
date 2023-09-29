@@ -12,11 +12,11 @@ cudnn_benchmark = True
 dataset_type = "GeospatialDataset"
 
 # TO BE DEFINED BY USER: data directory
-data_root = "<path to data root directory>"
+data_root = "E:\Data\weights"
 
 num_frames = 1
 img_size = 224
-num_workers = 4
+num_workers = 1
 samples_per_gpu = 4
 
 img_norm_cfg = dict(
@@ -51,7 +51,7 @@ image_to_float32 = True
 
 # model
 # TO BE DEFINED BY USER: model path
-pretrained_weights_path = "<path to pretrained weights>"
+pretrained_weights_path = ""
 num_layers = 12
 patch_size = 16
 embed_dim = 768
@@ -62,8 +62,8 @@ max_intervals = 10000
 evaluation_interval = 1000
 
 # TO BE DEFINED BY USER: model path
-experiment = "<experiment name>"
-project_dir = "<project directory name>"
+experiment = "experiment 1"
+project_dir = "E:\PycharmProjects\hls-foundation-os"
 work_dir = os.path.join(project_dir, experiment)
 save_path = work_dir
 
