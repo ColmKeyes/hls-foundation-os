@@ -11,7 +11,7 @@ cudnn_benchmark = True
 
 dataset_type = "GeospatialDataset"
 
-# TO BE DEFINED BY USER: data directory
+# TO BE DEFINED BY USER: data directory ok
 data_root = "E:\Data\weights"
 
 num_frames = 1
