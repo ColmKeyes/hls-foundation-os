@@ -12,12 +12,12 @@ cudnn_benchmark = True
 dataset_type = "GeospatialDataset"
 
 # TO BE DEFINED BY USER: data directory ok
-data_root = "E:\Data\weights"
+data_root = "E:\Data\hls_burn_scars"
 
 num_frames = 1
 img_size = 224
 num_workers = 1
-samples_per_gpu = 4
+samples_per_gpu = 8
 
 img_norm_cfg = dict(
     means=[
@@ -51,15 +51,15 @@ image_to_float32 = True
 
 # model
 # TO BE DEFINED BY USER: model path
-pretrained_weights_path = ""
+pretrained_weights_path = "E:\\burn_scars_Prithvi_100M.pth"
 num_layers = 12
 patch_size = 16
 embed_dim = 768
 num_heads = 12
 tubelet_size = 1
 output_embed_dim = num_frames*embed_dim
-max_intervals = 10000
-evaluation_interval = 1000
+max_intervals = 1000
+evaluation_interval = 100
 
 # TO BE DEFINED BY USER: model path
 experiment = "experiment 1"
