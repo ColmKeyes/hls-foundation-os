@@ -1,3 +1,14 @@
+# Modifications for Forest Disturbance Detection
+## Overview
+
+## Modification Details
+
+## Usage Instructions
+
+## Results and Findings
+
+
+
 # Image segmentation by foundation model finetuning
 
 This repository shows three examples of how [Prithvi](https://huggingface.co/ibm-nasa-geospatial/Prithvi-100M) can be finetuned for downstream tasks. The examples include flood detection using Sentinel-2 data from the [Sen1Floods11](https://github.com/cloudtostreet/Sen1Floods11) dataset, burn scars detection using the [NASA HLS fire scars dataset](https://huggingface.co/datasets/nasa-impact/hls_burn_scars) and multi-temporal crop classification using the [NASA HLS multi-temporal crop classification dataset](https://huggingface.co/datasets/ibm-nasa-geospatial/multi-temporal-crop-classification).
