@@ -10,11 +10,7 @@ The main functionalities include band selection and stacking for further analysi
 @File    : preprocessing_pipeline
 """
 
-##################
-## compress images
-##################
-## gdal_translate -a_nodata 0 -co "COMPRESS=LZW" resampled_radd_alerts.tif resampled_radd_alerts_int16_compressed.tif
-##
+
 import numpy as np
 import numpy.ma as ma
 import os
@@ -36,6 +32,7 @@ from rasterio.merge import merge
 from shapely.geometry import box,mapping
 from shapely.ops import transform as shapely_transform
 import pyproj
+from pyproj import Transformer
 from functools import partial
 # from geocube.api.core import make_geocube
 from datetime import datetime
@@ -55,6 +52,9 @@ from rasterio.transform import from_bounds, Affine
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from shapely.geometry import box
 from shapely.ops import transform as shapely_transform
+from osgeo import gdal
+from osgeo_utils import gdal_merge as gm
+
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -97,35 +97,34 @@ class HLSstacks:
         # Initialize a list to store titles of processed files (optional)
         self.titles = []
 
-
-    def resample_radd_alerts(self):
+    def resample_radd_alerts(self, merged_radd_alerts):
         """
         Resamples 'merged_radd_alerts.tif' to match the resolution of a Sentinel-2 image.
         """
 
-        # Use the first Sentinel-2 image to determine the target resolution and transform
+        # Use the first Sentinel-2 image to determine the target CRS
         sentinel_files = [f for f in os.listdir(self.sentinel2_path) if f.endswith('.tif')]
         if not sentinel_files:
             raise ValueError("No Sentinel-2 images found in the specified path.")
 
         sentinel_path = os.path.join(self.sentinel2_path, sentinel_files[0])
         with rasterio.open(sentinel_path) as sentinel_dataset:
-            sentinel_transform = sentinel_dataset.transform
             sentinel_crs = sentinel_dataset.crs
-            # You could also use sentinel_dataset.res to get the (x, y) resolution if needed
 
         # Open the merged RADD alerts image
-        merged_radd_path = os.path.join(self.radd_alert_path, 'merged_radd_alerts_qgis_int16_compressed.tif')
-        with rasterio.open(merged_radd_path) as merged_radd_dataset:
-            # Calculate the transform and dimensions for the new resolution to match the Sentinel-2 image
+        with rasterio.open(merged_radd_alerts) as merged_radd_dataset:
+            # Manually set the desired output resolution (30m)
+            desired_resolution = (30.0, 30.0)
+
+            # Calculate the new transform
             transform, width, height = calculate_default_transform(
                 merged_radd_dataset.crs, sentinel_crs,
                 merged_radd_dataset.width, merged_radd_dataset.height,
                 *merged_radd_dataset.bounds,
-                dst_transform=sentinel_transform
+                resolution=desired_resolution
             )
 
-            # Define the metadata for the resampled dataset
+            # Define metadata for the resampled dataset
             out_meta = merged_radd_dataset.meta.copy()
             out_meta.update({
                 "driver": "GTiff",
@@ -133,14 +132,14 @@ class HLSstacks:
                 "width": width,
                 "transform": transform,
                 "crs": sentinel_crs,
-                "count": merged_radd_dataset.count  # Keep the number of bands
+                "compress": "LZW",
+                "dtype": 'int16'
             })
 
             # Perform the resampling
-            resampled_radd_path = os.path.join(self.radd_alert_path, 'resampled_radd_alerts.tif')
+            resampled_radd_path = os.path.join(self.radd_alert_path, 'resampled_merged_radd_alerts_qgis_int16_compressed_30m.tif')
             with rasterio.open(resampled_radd_path, 'w', **out_meta) as dest:
                 for i in range(1, merged_radd_dataset.count + 1):
-                    # Reproject and resample each band
                     reproject(
                         source=rasterio.band(merged_radd_dataset, i),
                         destination=rasterio.band(dest, i),
@@ -151,7 +150,6 @@ class HLSstacks:
                         resampling=Resampling.nearest
                     )
 
-        print(f"Resampled raster saved to {resampled_radd_path}")
         return resampled_radd_path
 
 
@@ -205,58 +203,153 @@ class HLSstacks:
                                 dst.write(data, i)
 
 
+
+
+
     def crop_single_stack(self, sentinel_stack_path, single_image_path, output_path):
-        with rasterio.open(sentinel_stack_path) as sentinel_stack:
+
+        ##############################
+        ## AGB LAND CLASSIFICATION VERSION
+        ##############################
+        with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(single_image_path) as image_raster:
             sentinel_bounds = sentinel_stack.bounds
             sentinel_crs = sentinel_stack.crs
+            image_bounds = image_raster.bounds
+            image_crs = image_raster.crs
 
-            with rasterio.open(single_image_path) as image_raster:
-                image_bounds = image_raster.bounds
-                image_crs = image_raster.crs
+            # Create transformers to WGS 84 (EPSG:4326)
+            transformer_to_wgs84_sentinel = Transformer.from_crs(sentinel_crs, 'EPSG:4326', always_xy=True)
+            transformer_to_wgs84_image = Transformer.from_crs(image_crs, 'EPSG:4326', always_xy=True)
 
-                # Reproject the image raster to the CRS of the Sentinel-2 stack
-                transformer = partial(
-                    pyproj.transform,
-                    image_crs,  # source coordinate system (Image CRS)
-                    sentinel_crs  # destination coordinate system (Sentinel-2 stack CRS)
-                )
+            # Define the functions for coordinate transformation
+            def transform_to_wgs84_sentinel(x, y):
+                return transformer_to_wgs84_sentinel.transform(x, y)
 
-                sentinel_box = box(*sentinel_bounds)
-                sentinel_box_4326 = sentinel_box.__geo_interface__
-                sentinel_box_image_crs = shapely_transform(transformer, sentinel_box)
+            def transform_to_wgs84_image(x, y):
+                return transformer_to_wgs84_image.transform(x, y)
 
-                ## select only image raster where definite events occur.
+            # Transform sentinel bounds and image bounds to WGS 84
+            sentinel_box_wgs84 = shapely_transform(transform_to_wgs84_sentinel, box(*sentinel_bounds))
+            image_box_wgs84 = shapely_transform(transform_to_wgs84_image, box(image_bounds.left, image_bounds.bottom, image_bounds.right, image_bounds.top))
 
-                # Get the transform from the original raster dataset
-                image_transform = image_raster.transform
+            if not sentinel_box_wgs84.intersects(image_box_wgs84):
+                print("doesn't intersect in WGS 84")
+                return  # Optionally skip further processing
 
-                # Mask or clip the image raster to the area of the Sentinel-2 stack, specifying the nodata value and transform
-                image_cropped, transform = mask(image_raster, [sentinel_box_image_crs], crop=True, filled=False, pad=False, nodata=0)
+            transformer_to_image_crs = Transformer.from_crs('EPSG:4326', image_crs, always_xy=True)
 
-                image_cropped[0][image_cropped[0] != 3] = 0
+            def transform_to_image_crs(x, y):
+                return transformer_to_image_crs.transform(x, y)
 
-                # Update the profile for the cropped image
-                output_profile = image_raster.profile.copy()
-                output_profile.update({
-                    'height': image_cropped.shape[1],
-                    'width': image_cropped.shape[2],
-                    'transform': transform
-                })
+            # Transform sentinel_box_wgs84 back to the image raster's CRS
+            sentinel_box_image_crs = shapely_transform(transform_to_image_crs, sentinel_box_wgs84)
 
-                # Extract the relevant parts of the file name from the sentinel_stack_path
-                parts = os.path.basename(sentinel_stack_path).split('.')[0].split('_')
-                identifier = f"{parts[0]}_{parts[1]}"
+            # Now sentinel_box_image_crs is in the same CRS as the image raster
+            # Proceed with masking using sentinel_box_image_crs
+            image_cropped, transform = mask(image_raster, [sentinel_box_image_crs], crop=True, filled=False, pad=False, nodata=0)
 
-                # Assuming the base name of the single_image_path is 'resampled_radd_alerts_int16_compressed.tif'
-                suffix = os.path.basename(single_image_path)
+            # Mask or clip the image raster to the area of the Sentinel-2 stack, specifying the nodata value and transform
+            #image_cropped, transform = mask(image_raster, [sentinel_box_wgs84], crop=True, filled=False, pad=False, nodata=0)
 
-                # Combine the identifier and suffix to form the output file name
-                output_file_name = f"{identifier}_{suffix}"
-                output_file_path = os.path.join(output_path, output_file_name)
+            image_cropped[0][image_cropped[0] != 3] = 0
+
+            # Update the profile for the cropped image
+            output_profile = image_raster.profile.copy()
+            output_profile.update({
+                'height': image_cropped.shape[1],
+                'width': image_cropped.shape[2],
+                'transform': transform
+            })
+
+            # Extract the relevant parts of the file name from the sentinel_stack_path
+            parts = os.path.basename(sentinel_stack_path).split('.')[0].split('_')
+            identifier = f"{parts[0]}_{parts[1]}"
+
+            # Assuming the base name of the single_image_path is 'resampled_radd_alerts_int16_compressed.tif'
+            suffix = os.path.basename(single_image_path)
+
+            # Combine the identifier and suffix to form the output file name
+            output_file_name = f"{identifier}_{suffix}"
+            output_file_path = os.path.join(output_path, output_file_name)
+
+            if os.path.exists(output_file_path):
+                print(f"File {output_file_path} already exists. Skipping cropping.")
+                return  # Skip the rest of the function
 
 
-                with rasterio.open(output_file_path, 'w', **output_profile) as dest:
-                    dest.write(image_cropped)
+            with rasterio.open(output_file_path, 'w', **output_profile) as dest:
+                dest.write(image_cropped)
+
+    def clip_to_extent(self, src_file, target_file, output_file):
+        """
+        Clips src_file to the extent of target_file.
+
+        :param src_file: File path of the source image to be clipped.
+        :param target_file: File path of the target image for the clipping extent.
+        :param output_file: File path for the output clipped image.
+        """
+        # Open the target image and get its bounding box
+        with rasterio.open(target_file) as target_src:
+            target_bounds = target_src.bounds
+
+        # Create a bounding box geometry
+        bbox = box(*target_bounds)
+        geo = [bbox.__geo_interface__]
+
+        # Open the source image and clip it using the bounding box
+        with rasterio.open(src_file) as src:
+            out_image, out_transform = mask(dataset=src, shapes=geo, crop=True)
+            out_meta = src.meta.copy()
+
+            # Update the metadata to match the clipped data
+            out_meta.update({"driver": "GTiff",
+                             "height": out_image.shape[1],
+                             "width": out_image.shape[2],
+                             "transform": out_transform})
+
+            # Write the clipped image
+            with rasterio.open(output_file, "w", **out_meta) as dest:
+                dest.write(out_image)
+
+    from osgeo import gdal
+
+
+    def warp_band(self, input_file, band_num, warped_output_file):
+        """
+        Warps a specific band of a raster file.
+
+        :param input_file: File path of the input raster.
+        :param band_num: Band number to warp.
+        :param warped_output_file: File path for the output warped band.
+        """
+        ds = gdal.Open(input_file)
+        band = ds.GetRasterBand(band_num)
+        driver = gdal.GetDriverByName('GTiff')
+        out_ds = driver.Create(warped_output_file, ds.RasterXSize, ds.RasterYSize, 1, band.DataType)
+        out_ds.SetGeoTransform(ds.GetGeoTransform())
+        out_ds.SetProjection(ds.GetProjection())
+        out_band = out_ds.GetRasterBand(1)
+        out_band.WriteArray(band.ReadAsArray())
+        out_band.FlushCache()
+        ds = None
+        out_ds = None
+
+    def merge_bands(self, band_files, output_file):
+        """
+        Merges multiple single-band raster files into a multi-band raster file.
+
+        :param band_files: List of file paths of the single-band rasters.
+        :param output_file: File path for the output multi-band raster.
+        """
+        args = ['']  # An empty string as the first argument for gdal_merge
+        args.extend(['-o', output_file])
+        args.append('-separate')
+        args.extend(band_files)
+        gm.main(args)
+
+
+
+
 
 
 
