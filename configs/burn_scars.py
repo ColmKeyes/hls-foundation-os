@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+This configuration script sets up the parameters for running the Prithvi-100m model, specifically tailored for burn scar detection using Sentinel-2 imagery. Adapted from the original Prithvi model code.
+"""
+"""
+@Time    : [Time of Creation, e.g., 07/12/2023 10:30]
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : burn_scars_config
+"""
+
 import os
 
 custom_imports = dict(imports=["geospatial_fm"])
@@ -56,8 +67,7 @@ num_layers = 12
 patch_size = 16
 embed_dim = 768
 num_heads = 12
-tubelet_size = 1
-output_embed_dim = num_frames*embed_dim
+tubelet_size = 1output_embed_dim = num_frames*embed_dim
 max_intervals = 1000
 evaluation_interval = 100
 

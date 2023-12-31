@@ -258,7 +258,8 @@ class HLSstacks:
             output_profile.update({
                 'height': image_cropped.shape[1],
                 'width': image_cropped.shape[2],
-                'transform': transform
+                'transform': transform,
+                'count' : 1
             })
 
             # Extract the relevant parts of the file name from the sentinel_stack_path
@@ -278,7 +279,7 @@ class HLSstacks:
 
 
             with rasterio.open(output_file_path, 'w', **output_profile) as dest:
-                dest.write(image_cropped)
+                dest.write(image_cropped[1],1)
 
     def clip_to_extent(self, src_file, target_file, output_file):
         """
@@ -311,44 +312,132 @@ class HLSstacks:
             with rasterio.open(output_file, "w", **out_meta) as dest:
                 dest.write(out_image)
 
-    from osgeo import gdal
 
 
-    def warp_band(self, input_file, band_num, warped_output_file):
-        """
-        Warps a specific band of a raster file.
+    def reorder_and_add_blank_band(self, input_file, output_file):
+        with rasterio.open(input_file) as src:
+            # Create metadata for the new raster with an additional band
+            meta = src.meta.copy()
+            meta.update(count=7)
 
-        :param input_file: File path of the input raster.
-        :param band_num: Band number to warp.
-        :param warped_output_file: File path for the output warped band.
-        """
-        ds = gdal.Open(input_file)
-        band = ds.GetRasterBand(band_num)
-        driver = gdal.GetDriverByName('GTiff')
-        out_ds = driver.Create(warped_output_file, ds.RasterXSize, ds.RasterYSize, 1, band.DataType)
-        out_ds.SetGeoTransform(ds.GetGeoTransform())
-        out_ds.SetProjection(ds.GetProjection())
-        out_band = out_ds.GetRasterBand(1)
-        out_band.WriteArray(band.ReadAsArray())
-        out_band.FlushCache()
-        ds = None
-        out_ds = None
+            # Create the new raster file
+            with rasterio.open(output_file, 'w', **meta) as dst:
+                # Write a blank band as the first band
+                blank_band = src.read(1) * 0
+                dst.write(blank_band, 1)
 
-    def merge_bands(self, band_files, output_file):
-        """
-        Merges multiple single-band raster files into a multi-band raster file.
+                # Write the original bands to the new positions (2 to 7)
+                for band in range(1, src.count + 1):
+                    data = src.read(band)
+                    dst.write(data, band + 1)
 
-        :param band_files: List of file paths of the single-band rasters.
-        :param output_file: File path for the output multi-band raster.
-        """
-        args = ['']  # An empty string as the first argument for gdal_merge
-        args.extend(['-o', output_file])
-        args.append('-separate')
-        args.extend(band_files)
-        gm.main(args)
+    def warp_rasters(self, input_files, output_file, src_nodata=None, dst_nodata=None):
+        # Warp options
+        warp_options = gdal.WarpOptions(format='GTiff',
+                                        srcNodata=src_nodata,
+                                        dstNodata=dst_nodata,
+                                        multithread=True)
+
+        # Perform the warp
+        gdal.Warp(destNameOrDestDS=output_file,
+                  srcDSOrSrcDSTab=input_files,
+                  options=warp_options)
 
 
 
+
+
+    def apply_fmask(self, sentinel_stack_path, fmask_path, output_path):
+        with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(fmask_path) as fmask:
+            # Read the FMask data
+            fmask_data = fmask.read(1)
+
+            # Mask to apply: for example, mask out cloud and cloud shadow
+            # Adjust the mask condition based on your specific needs
+            mask = (fmask_data == 0)  # 0 often represents clear conditions in FMask
+
+            # Initialize an array to hold the masked data
+            masked_data = np.empty_like(sentinel_stack.read(), dtype=rasterio.float32)
+
+            # Apply the mask to each band
+            for band in range(sentinel_stack.count):
+                band_data = sentinel_stack.read(band + 1)
+                masked_band = np.where(mask, band_data, np.nan)  # Replace masked values with NaN
+                masked_data[band] = masked_band
+
+            # Update the profile for the output file
+            output_profile = sentinel_stack.profile.copy()
+            output_profile.update(dtype=rasterio.float32, nodata=np.nan)
+
+            # Write the masked data to a new file
+            output_file = os.path.join(output_path, os.path.basename(sentinel_stack_path))
+            with rasterio.open(output_file, 'w', **output_profile) as dest:
+                dest.write(masked_data)
+
+
+
+
+    def merge_with_agb(self, sentinel_stack_path, agb_path, output_path):
+        with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(agb_path) as agb:
+            # Check and reproject AGB data to match Sentinel-2 stack CRS and resolution
+            if agb.crs != sentinel_stack.crs or agb.res != sentinel_stack.res:
+                # Reproject and resample AGB data
+                # (Add reprojection and resampling code here)
+                pass
+
+            # Read and stack data
+            sentinel_data = sentinel_stack.read()
+            agb_data = agb.read(1)
+
+            # Stack AGB data as an additional band to Sentinel-2 data
+            stacked_data = np.concatenate((sentinel_data, agb_data[None, :, :]), axis=0)
+
+            # Update the profile for the output file
+            output_profile = sentinel_stack.profile.copy()
+            output_profile.update(count=sentinel_data.shape[0] + 1)
+
+            # Write the stacked data to a new file
+            output_file = os.path.join(output_path, os.path.basename(sentinel_stack_path).replace('.tif', '_with_AGB.tif'))
+            with rasterio.open(output_file, 'w', **output_profile) as dest:
+                dest.write(stacked_data)
+
+
+
+
+
+
+    # def warp_band(self, input_file, band_num, warped_output_file):
+    #     """
+    #     Warps a specific band of a raster file.
+    #
+    #     :param input_file: File path of the input raster.
+    #     :param band_num: Band number to warp.
+    #     :param warped_output_file: File path for the output warped band.
+    #     """
+    #     ds = gdal.Open(input_file)
+    #     band = ds.GetRasterBand(band_num)
+    #     driver = gdal.GetDriverByName('GTiff')
+    #     out_ds = driver.Create(warped_output_file, ds.RasterXSize, ds.RasterYSize, 1, band.DataType)
+    #     out_ds.SetGeoTransform(ds.GetGeoTransform())
+    #     out_ds.SetProjection(ds.GetProjection())
+    #     out_band = out_ds.GetRasterBand(1)
+    #     out_band.WriteArray(band.ReadAsArray())
+    #     out_band.FlushCache()
+    #     ds = None
+    #     out_ds = None
+    #
+    # def merge_bands(self, band_files, output_file):
+    #     """
+    #     Merges multiple single-band raster files into a multi-band raster file.
+    #
+    #     :param band_files: List of file paths of the single-band rasters.
+    #     :param output_file: File path for the output multi-band raster.
+    #     """
+    #     args = ['']  # An empty string as the first argument for gdal_merge
+    #     args.extend(['-o', output_file])
+    #     args.append('-separate')
+    #     args.extend(band_files)
+    #     gm.main(args)
 
 
 
