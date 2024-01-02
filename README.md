@@ -1,6 +1,6 @@
 # Modifications for Forest Disturbance Detection
 
-### This project, undertaken as part of an internship, focuses on fine-tuning the Prithvi-100m model to enhance its capabilities in forest disturbance detection.
+### This project, undertaken as part of an internship, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection.
 
 
 
