@@ -1,11 +1,28 @@
 # Modifications for Forest Disturbance Detection
+
+### This project, undertaken as part of an internship, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection.
+
+
+
 ## Overview
+This repository details the extension of the Prithvi-100m model, originally trained on diverse datasets, to assess its performance on new, unseen classifications, specifically focusing on forest disturbance detection using SAR data. The effort centers on evaluating the model's ability to generalize to novel and complex data types, a crucial step in advancing remote sensing applications in forest monitoring.
+
 
 ## Modification Details
+Modifications were primarily geared towards adapting the model to effectively process and interpret SAR data, a significant departure from its initial training datasets. This involved recalibrating data preprocessing techniques to handle the unique properties of SAR imagery, ensuring compatibility and optimal input quality. The core of this adaptation was to evaluate the model’s response to unseen data types, particularly in the context of forest disturbances, thereby assessing its robustness and generalization capabilities. These enhancements are crucial for understanding the model's applicability in real-world scenarios, where it encounters diverse and previously unencountered data characteristics.
+
 
 ## Usage Instructions
 
+
 ## Results and Findings
+
+### Expected Outcomes
+#### Improved Classification Scores: It is anticipated that the modifications and fine-tuning of the Prithvi-100m model will lead to moderate improvements in classification accuracy, particularly when compared to baseline RADD alerts. These enhancements are expected to be evident in metrics such as precision, recall, and overall accuracy.
+
+#### Model's Adaptability to SAR Data: A key focus of this project is to explore and demonstrate the model's capacity to adapt to and process SAR data, which is inherently different from the datasets used in its original training. The successful processing and interpretation of SAR imagery for forest disturbance detection would be a significant achievement, highlighting the model's versatility.
+
+
 
 
 
