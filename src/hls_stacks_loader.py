@@ -69,7 +69,7 @@ pd.set_option('display.width', 1000)
 
 class HLSstacks:
     """
-    A class for processing Sentinel-2 imagery data to generate band stacks for further analysis.
+    A class for processing Sentinel-2 imagery data in preperation for assimilation by the Prithvi-100m model.
     """
 
     def __init__(self, sentinel2_path, stack_path_list, bands, radd_alert_path, land_cover_path, shp=None):
@@ -96,6 +96,10 @@ class HLSstacks:
 
         # Initialize a list to store titles of processed files (optional)
         self.titles = []
+
+    """"""""
+    # Core Functionalities
+    """"""""
 
     def resample_radd_alerts(self, merged_radd_alerts):
         """
@@ -151,60 +155,6 @@ class HLSstacks:
                     )
 
         return resampled_radd_path
-
-
-
-
-    def write_hls_rasterio_stack(self):
-        """
-        Write folder of Sentinel-2 GeoTIFFs, corresponding Fmask, to a GeoTIFF stack file.
-        """
-
-        for file in os.listdir(self.sentinel2_path):
-            if any(band in file for band in self.bands) and file.endswith('.tif'):
-                sentinel_file = os.path.join(self.sentinel2_path, file)
-
-                # Corresponding Fmask file
-                fmask_file_name = '.'.join(file.split('.')[:-2]) + '.Fmask.tif'
-                fmask_file = os.path.join(self.sentinel2_path, fmask_file_name)
-
-                if not os.path.exists(fmask_file):
-                    continue  # Skip if corresponding Fmask file does not exist
-
-                # Files to be stacked (only Sentinel-2 bands and Fmask)
-                files = [sentinel_file, fmask_file]
-
-                # Read the first image to setup profile
-                with rasterio.open(sentinel_file) as src_image:
-                    dst_crs = src_image.crs
-                    dst_transform, dst_width, dst_height = calculate_default_transform(
-                        src_image.crs, dst_crs, src_image.width, src_image.height, *src_image.bounds)
-
-                    # Create a profile for the stack
-                    dst_profile = src_image.profile.copy()
-                    dst_profile.update({
-                        "driver": "GTiff",
-                        "count": len(files),
-                        "crs": dst_crs,
-                        "transform": dst_transform,
-                        "width": dst_width,
-                        "height": dst_height
-                    })
-
-                    # Create stack directory if it doesn't exist
-                    if not os.path.exists(self.stack_path_list):
-                        os.makedirs(self.stack_path_list)
-
-                    stack_file = os.path.join(self.stack_path_list, f'{os.path.splitext(file)[0]}_stack.tif')
-                    with rasterio.open(stack_file, 'w', **dst_profile) as dst:
-                        for i, file_path in enumerate(files, start=1):
-                            with rasterio.open(file_path) as src:
-                                data = src.read(1)  # Read the first band
-                                dst.write(data, i)
-
-
-
-
 
     def crop_single_stack(self, sentinel_stack_path, single_image_path, output_path):
 
@@ -281,6 +231,81 @@ class HLSstacks:
             with rasterio.open(output_file_path, 'w', **output_profile) as dest:
                 dest.write(image_cropped[1],1)
 
+    def write_hls_rasterio_stack(self):
+        """
+        Write folder of Sentinel-2 GeoTIFFs, corresponding Fmask, to a GeoTIFF stack file.
+        """
+
+        for file in os.listdir(self.sentinel2_path):
+            if any(band in file for band in self.bands) and file.endswith('.tif'):
+                sentinel_file = os.path.join(self.sentinel2_path, file)
+
+                # Corresponding Fmask file
+                fmask_file_name = '.'.join(file.split('.')[:-2]) + '.Fmask.tif'
+                fmask_file = os.path.join(self.sentinel2_path, fmask_file_name)
+
+                if not os.path.exists(fmask_file):
+                    continue  # Skip if corresponding Fmask file does not exist
+
+                # Files to be stacked (only Sentinel-2 bands and Fmask)
+                files = [sentinel_file, fmask_file]
+
+                # Read the first image to setup profile
+                with rasterio.open(sentinel_file) as src_image:
+                    dst_crs = src_image.crs
+                    dst_transform, dst_width, dst_height = calculate_default_transform(
+                        src_image.crs, dst_crs, src_image.width, src_image.height, *src_image.bounds)
+
+                    # Create a profile for the stack
+                    dst_profile = src_image.profile.copy()
+                    dst_profile.update({
+                        "driver": "GTiff",
+                        "count": len(files),
+                        "crs": dst_crs,
+                        "transform": dst_transform,
+                        "width": dst_width,
+                        "height": dst_height
+                    })
+
+                    # Create stack directory if it doesn't exist
+                    if not os.path.exists(self.stack_path_list):
+                        os.makedirs(self.stack_path_list)
+
+                    stack_file = os.path.join(self.stack_path_list, f'{os.path.splitext(file)[0]}_stack.tif')
+                    with rasterio.open(stack_file, 'w', **dst_profile) as dst:
+                        for i, file_path in enumerate(files, start=1):
+                            with rasterio.open(file_path) as src:
+                                data = src.read(1)  # Read the first band
+                                dst.write(data, i)
+
+    def merge_with_agb(self, sentinel_stack_path, agb_path, output_path):
+        with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(agb_path) as agb:
+            # Check and reproject AGB data to match Sentinel-2 stack CRS and resolution
+            if agb.crs != sentinel_stack.crs or agb.res != sentinel_stack.res:
+                # Reproject and resample AGB data
+                # (Add reprojection and resampling code here)
+                pass
+
+            # Read and stack data
+            sentinel_data = sentinel_stack.read()
+            agb_data = agb.read(1)
+
+            # Stack AGB data as an additional band to Sentinel-2 data
+            stacked_data = np.concatenate((sentinel_data, agb_data[None, :, :]), axis=0)
+
+            # Update the profile for the output file
+            output_profile = sentinel_stack.profile.copy()
+            output_profile.update(count=sentinel_data.shape[0] + 1)
+
+            # Write the stacked data to a new file
+            output_file = os.path.join(output_path, os.path.basename(sentinel_stack_path).replace('.tif', '_with_AGB.tif'))
+            with rasterio.open(output_file, 'w', **output_profile) as dest:
+                dest.write(stacked_data)
+
+    """"""""
+    # Utility Functionalities
+    """"""""
+
     def clip_to_extent(self, src_file, target_file, output_file):
         """
         Clips src_file to the extent of target_file.
@@ -312,8 +337,6 @@ class HLSstacks:
             with rasterio.open(output_file, "w", **out_meta) as dest:
                 dest.write(out_image)
 
-
-
     def reorder_and_add_blank_band(self, input_file, output_file):
         with rasterio.open(input_file) as src:
             # Create metadata for the new raster with an additional band
@@ -330,22 +353,6 @@ class HLSstacks:
                 for band in range(1, src.count + 1):
                     data = src.read(band)
                     dst.write(data, band + 1)
-
-    def warp_rasters(self, input_files, output_file, src_nodata=None, dst_nodata=None):
-        # Warp options
-        warp_options = gdal.WarpOptions(format='GTiff',
-                                        srcNodata=src_nodata,
-                                        dstNodata=dst_nodata,
-                                        multithread=True)
-
-        # Perform the warp
-        gdal.Warp(destNameOrDestDS=output_file,
-                  srcDSOrSrcDSTab=input_files,
-                  options=warp_options)
-
-
-
-
 
     def apply_fmask(self, sentinel_stack_path, fmask_path, output_path):
         with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(fmask_path) as fmask:
@@ -374,32 +381,23 @@ class HLSstacks:
             with rasterio.open(output_file, 'w', **output_profile) as dest:
                 dest.write(masked_data)
 
+    """"""""
+    # Data Wrangling Functionalities
+    """"""""
+
+    def warp_rasters(self, input_files, output_file, src_nodata=None, dst_nodata=None):
+        # Warp options
+        warp_options = gdal.WarpOptions(format='GTiff',
+                                        srcNodata=src_nodata,
+                                        dstNodata=dst_nodata,
+                                        multithread=True)
+
+        # Perform the warp
+        gdal.Warp(destNameOrDestDS=output_file,
+                  srcDSOrSrcDSTab=input_files,
+                  options=warp_options)
 
 
-
-    def merge_with_agb(self, sentinel_stack_path, agb_path, output_path):
-        with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(agb_path) as agb:
-            # Check and reproject AGB data to match Sentinel-2 stack CRS and resolution
-            if agb.crs != sentinel_stack.crs or agb.res != sentinel_stack.res:
-                # Reproject and resample AGB data
-                # (Add reprojection and resampling code here)
-                pass
-
-            # Read and stack data
-            sentinel_data = sentinel_stack.read()
-            agb_data = agb.read(1)
-
-            # Stack AGB data as an additional band to Sentinel-2 data
-            stacked_data = np.concatenate((sentinel_data, agb_data[None, :, :]), axis=0)
-
-            # Update the profile for the output file
-            output_profile = sentinel_stack.profile.copy()
-            output_profile.update(count=sentinel_data.shape[0] + 1)
-
-            # Write the stacked data to a new file
-            output_file = os.path.join(output_path, os.path.basename(sentinel_stack_path).replace('.tif', '_with_AGB.tif'))
-            with rasterio.open(output_file, 'w', **output_profile) as dest:
-                dest.write(stacked_data)
 
 
 

@@ -23,7 +23,7 @@ cudnn_benchmark = True
 dataset_type = "GeospatialDataset"
 
 # TO BE DEFINED BY USER: data directory ok
-data_root = "E:\Data\hls_burn_scars"
+data_root = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc" # "E:\Data\hls_burn_scars"
 
 num_frames = 1
 img_size = 224
@@ -67,7 +67,8 @@ num_layers = 12
 patch_size = 16
 embed_dim = 768
 num_heads = 12
-tubelet_size = 1output_embed_dim = num_frames*embed_dim
+tubelet_size = 1
+output_embed_dim = num_frames*embed_dim
 max_intervals = 1000
 evaluation_interval = 100
 

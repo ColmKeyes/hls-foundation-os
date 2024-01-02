@@ -23,7 +23,7 @@ cudnn_benchmark = True
 dataset_type = "GeospatialDataset"
 
 # TO BE DEFINED BY USER: data directory ok
-data_root = "E:\Data\hls_burn_scars"
+data_root = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc"
 
 num_frames = 1
 img_size = 224
