@@ -9,13 +9,15 @@ Modifications were primarily geared towards adapting the model to effectively pr
 
 ## Usage Instructions
 
+
+## Results and Findings
+
 ### Expected Outcomes
 #### Improved Classification Scores: It is anticipated that the modifications and fine-tuning of the Prithvi-100m model will lead to moderate improvements in classification accuracy, particularly when compared to baseline RADD alerts. These enhancements are expected to be evident in metrics such as precision, recall, and overall accuracy.
 
 #### Model's Adaptability to SAR Data: A key focus of this project is to explore and demonstrate the model's capacity to adapt to and process SAR data, which is inherently different from the datasets used in its original training. The successful processing and interpretation of SAR imagery for forest disturbance detection would be a significant achievement, highlighting the model's versatility.
 
 
-## Results and Findings
 
 
 
