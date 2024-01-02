@@ -1,4 +1,9 @@
 # Modifications for Forest Disturbance Detection
+
+### This project, undertaken as part of an internship, focuses on fine-tuning the Prithvi-100m model to enhance its capabilities in forest disturbance detection.
+
+
+
 ## Overview
 This repository details the extension of the Prithvi-100m model, originally trained on diverse datasets, to assess its performance on new, unseen classifications, specifically focusing on forest disturbance detection using SAR data. The effort centers on evaluating the model's ability to generalize to novel and complex data types, a crucial step in advancing remote sensing applications in forest monitoring.
 
