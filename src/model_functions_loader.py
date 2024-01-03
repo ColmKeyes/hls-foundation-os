@@ -15,7 +15,7 @@ import numpy as np
 import os
 
 
-class ModelFunctions:
+class prep:
     def __init__(self,  output_folder=None, tile_size=224):
         self.tile_size = tile_size
         self.output_folder = output_folder
@@ -46,6 +46,17 @@ class ModelFunctions:
                             transform=rasterio.windows.transform(window, src.transform)
                     ) as tile_dst:
                         tile_dst.write(tile)
+
+
+
+
+
+
+
+
+
+
+
 
 
 

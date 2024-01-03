@@ -67,7 +67,7 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 
-class HLSstacks:
+class prep:
     """
     A class for processing Sentinel-2 imagery data in preperation for assimilation by the Prithvi-100m model.
     """
