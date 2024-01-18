@@ -1,0 +1,62 @@
+"""
+@Time    : [Time of Creation, e.g., 07/12/2023 10:00]
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : model_functions
+"""
+
+import rasterio
+from rasterio.windows import Window
+import numpy as np
+import os
+from src.model_input_processor import Loader
+
+output_folder = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc"
+combined_radd_sen2_stack_path = r"E:\Data\Sentinel2_data\30pc_cc\Borneo_June2020_Jan2023_30pc_cc_stacks_radd"
+stack_path_list = r'E:\Data\Sentinel2_data\30pc_cc\Borneo_June2020_Jan2023_30pc_cc_stacks_radd'
+source_dir = r"E:\Data\Sentinel2_data\30pc_cc\Borneo_June2020_Jan2023_30pc_cc_stacks_radd_fmask_corrected"
+train_dir = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\training"
+val_dir = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\validation"
+output_dir = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc"
+
+
+tile_size = 512
+
+if __name__ == '__main__':
+    model_funcs = Loader(output_folder,  train_dir, val_dir, output_folder,tile_size)
+
+    # for sentinel2_file in os.listdir(combined_radd_sen2_stack_path):
+    #     if sentinel2_file.endswith('.tif'):
+    #         sentinel2_file_path = os.path.join(stack_path_list, sentinel2_file)
+    #         model_funcs.write_hls_rasterio_stack()
+
+    # checkpoint_dir = r'E:\PycharmProjects\hls-foundation-os\Prithvi100m'
+    # model_funcs.plot_training_progress(checkpoint_dir)
+
+    #######
+    ## plot model variables
+    #######
+
+    #model_funcs.plot_metrics_from_log(r"E:\PycharmProjects\hls-foundation-os\Prithvi100m\20240115_183444.log")
+
+    #model_funcs.alter_radd_data_to_label(r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\validation")
+
+
+
+    #######
+    ## Filter images based on minimal labels requirement
+    #######
+
+    alert_stacks = model_funcs.filter_stacks(train_dir, 1,0)
+    distribution = model_funcs.calculate_alert_distribution(alert_stacks,5)
+    print(distribution)
+
+    #######
+    ## normalise and determine band mean and stddev for config file
+    #######
+
+    # for folder in [train_dir,val_dir]:
+    #     model_funcs.normalize_data(folder)
+    #
+    # band_stats = model_funcs.calculate_band_statistics([train_dir,val_dir])
+    # print(band_stats)
