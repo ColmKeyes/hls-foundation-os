@@ -31,30 +31,35 @@ num_workers = 1
 samples_per_gpu = 8
 
 img_norm_cfg = dict(
-    means=[
-        0.033349706741586264,
-        0.05701185520536176,
-        0.05889748132001316,
-        0.2323245113436119,
-        0.1972854853760658,
-        0.11944914225186566,
-    ],
-    stds=[
-        0.02269135568823774,
-        0.026807560223070237,
-        0.04004109844362779,
-        0.07791732423672691,
-        0.08708738838140137,
-        0.07241979477437814,
-    ],
-)  # change the mean and std of all the bands
+means=[190.25926138433516, 429.89401106101735, 263.64892182260917, 2914.742437197362, 1436.1499327360475, 552.0405896092034],
+         stds=[147.77000967917303, 181.20171057982083, 215.94822142698277, 560.9504799450765, 380.71293248398223, 229.565368633047])
+
+
+
+
+    # means=[
+    #     0.033349706741586264,
+    #     0.05701185520536176,
+    #     0.05889748132001316,
+    #     0.2323245113436119,
+    #     0.1972854853760658,
+    #     0.11944914225186566,
+    # ],
+    # stds=[
+    #     0.02269135568823774,
+    #     0.026807560223070237,
+    #     0.04004109844362779,
+    #     0.07791732423672691,
+    #     0.08708738838140137,
+    #     0.07241979477437814,
+    # ],)`  # change the mean and std of all the bands
 
 bands = [0, 1, 2, 3, 4, 5]
 tile_size = 224
 orig_nsize = 512
 crop_size = (tile_size, tile_size)
-img_suffix = "_merged.tif"
-seg_map_suffix = ".mask.tif"
+img_suffix = "_sentinel.tif"
+seg_map_suffix = "_radd.tif"
 ignore_index = -1
 image_nodata = -9999
 image_nodata_replace = 0
@@ -67,12 +72,13 @@ num_layers = 12
 patch_size = 16
 embed_dim = 768
 num_heads = 12
-tubelet_size = 1output_embed_dim = num_frames*embed_dim
-max_intervals = 1000
+tubelet_size = 1
+output_embed_dim = num_frames*embed_dim
+max_intervals = 300
 evaluation_interval = 100
 
 # TO BE DEFINED BY USER: model path
-experiment = "experiment 1"
+experiment = "Prithvi-100m"
 project_dir = "E:\PycharmProjects\hls-foundation-os"
 work_dir = os.path.join(project_dir, experiment)
 save_path = work_dir
@@ -224,11 +230,22 @@ evaluation = dict(
 )
 
 loss_func = dict(
+#     type="FocalLoss",
+#     use_sigmoid=True,
+#     gamma=2.0,
+#     alpha=0.5,
+#     reduction='mean',
+#     class_weight=None,  # Replace with a list of class weights if available
+#     loss_weight=1.0,
+#     loss_name='loss_focal'
+# )
+
+
     type="DiceLoss",
     use_sigmoid=False,
     loss_weight=1,
-    ignore_index=-1
-)
+    ignore_index=-1)
+
 
 runner = dict(type="IterBasedRunner", max_iters=max_intervals)
 workflow = [("train", 1)]
