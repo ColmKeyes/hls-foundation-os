@@ -67,7 +67,7 @@ image_to_float32 = True
 
 # model
 # TO BE DEFINED BY USER: model path
-pretrained_weights_path = "E:\\burn_scars_Prithvi_100M.pth"
+pretrained_weights_path = "E:\\Prithvi_100M.pt"
 num_layers = 12
 patch_size = 16
 embed_dim = 768
@@ -160,7 +160,7 @@ test_pipeline = [
     )
 ]
 
-CLASSES = ("Unburnt land", "Burn scar")
+CLASSES = ("Forest", "Distrubed_Forest")
 
 data = dict(
     samples_per_gpu=samples_per_gpu,
@@ -216,6 +216,12 @@ log_config = dict(
         dict(type="TensorboardLoggerHook", by_epoch=False)
     ]
 )
+
+custom_hooks = [dict(
+    type='PlotIterationHook',
+    interval=100)
+]
+
 checkpoint_config = dict(
     by_epoch=True,
     interval=10,
@@ -247,7 +253,8 @@ loss_func = dict(
     ignore_index=-1)
 
 
-runner = dict(type="IterBasedRunner", max_iters=max_intervals)
+
+runner = dict(type="IterBasedRunner", max_iters=max_intervals)#, custom_hooks= custom_hooks)
 workflow = [("train", 1)]
 norm_cfg = dict(type="BN", requires_grad=True)
 model = dict(
@@ -306,7 +313,9 @@ model = dict(
         mode="slide",
         stride=(int(tile_size / 2), int(tile_size / 2)),
         crop_size=(tile_size, tile_size),
-    ),
+
+),
+
 )
 gpu_ids = range(0, 1)
 auto_resume = False
