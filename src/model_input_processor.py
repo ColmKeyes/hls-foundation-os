@@ -97,38 +97,37 @@ class Loader:
                                 data = src.read(1)  # Read the first band
                                 dst.write(data, i)
 
-
-
-
     def alter_radd_data_to_label(self, radd_tiles_path):
         # Iterate over files in the training directory
         for filename in os.listdir(radd_tiles_path):
-            if filename.endswith('_radd.tif'):
+            if filename.endswith('.tif') and not filename.endswith('_.tif') and not filename.endswith('raddaltered.tif'):
                 radd_alert_path = os.path.join(radd_tiles_path, filename)
-                output_filename = os.path.splitext(filename)[0] + '_.tif'
+                output_filename = os.path.splitext(filename)[0] + '_raddaltered.tif'
                 output_path = os.path.join(radd_tiles_path, output_filename)
 
                 # Open the RADD alert raster file
                 with rasterio.open(radd_alert_path) as src:
-                    # Read the data
-                    radd_data = src.read(1)  # Assuming RADD data is in the first band
+                    # Read all the data (assuming the RADD data is in the first band)
+                    data = src.read()
 
-                    # Convert values greater than 0 to 1
+                    # Convert values greater than 0 to 1 in the first band
+                    radd_data = data[0, :, :]
                     radd_data[radd_data > 0] = 1
+                    data[0, :, :] = radd_data  # Replace the first band with the altered data
 
-                    # Save the altered data to the new file
-                    with rasterio.open(
-                        output_path,
-                        'w',
-                        driver='GTiff',
-                        height=radd_data.shape[0],
-                        width=radd_data.shape[1],
-                        count=1,
-                        dtype=radd_data.dtype,
-                        crs=src.crs,
-                        transform=src.transform
-                    ) as dst:
-                        dst.write(radd_data, 1)
+                    # Save the altered data to the new file, including all bands
+                    profile = src.profile
+                    src.close()
+                    profile.update(count=data.shape[0])  # Update the count with the number of bands
+                    with rasterio.open(output_path, 'w', **profile) as dst:
+                        dst.write(data)
+
+                # Now remove the original file, after confirming the new file is written
+                file_to_delete = radd_alert_path
+                if os.path.exists(file_to_delete):
+                    os.remove(file_to_delete)
+                    print(f"Removed file {file_to_delete}")
+
 
 
     def filter_stacks(self, stack_directory, alert_label_value, min_alert_pixels=0):
@@ -141,22 +140,21 @@ class Loader:
         """
         alert_counts = []
         for file in os.listdir(stack_directory):
-            if file.endswith('_radd_.tif'):
+            if file.endswith(".tif"):#_radd.tif'):
                 file_path = os.path.join(stack_directory, file)
 
                 with rasterio.open(file_path) as src:
                     radd_alerts = src.read(1)  # Assuming the RADD alert band is the first band
-                    alert_count = np.count_nonzero(radd_alerts == alert_label_value)
+                    alert_count = np.count_nonzero(radd_alerts > 0)    ### alert_label_value)
                     print(f"file:{file}, alert count: {alert_count}")
                     alert_counts.append(alert_count)
 
 
                     src.close()
                     if alert_count < min_alert_pixels:
-                        # Construct base name and delete corresponding files
-                        base_name = file.replace('_radd_.tif', '')
-                        for suffix in ['_radd_.tif', '_radd.tif', '_sentinel.tif']:
-                            file_to_delete = os.path.join(stack_directory, base_name + suffix)
+                        base_name = file.replace('_radd.tif', '')
+                        for suffix in [".tif",'_radd_.tif', '_radd.tif', '_sentinel.tif']:
+                            file_to_delete = os.path.join(stack_directory, f"{base_name}")
                             if os.path.exists(file_to_delete):
                                 os.remove(file_to_delete)
                                 print(f"Removed file {file_to_delete}")
@@ -262,8 +260,8 @@ class Loader:
                         valid_mask = band != nodata_value
                         valid_band = band[valid_mask]
                         max_value = valid_band.max()
-                        if max_value > 1:
-                            print("yo")
+                        # if max_value > 1:
+                        #     print("yo")
                         min_value = valid_band.min()
                         normalized_band = np.where(valid_mask, (band - min_value) / (max_value - min_value), nodata_value)
                         normalized_bands[i] = normalized_band
@@ -271,7 +269,47 @@ class Loader:
                     # Write the normalized data back to the file
                     src.write(normalized_bands)
 
+    def normalize_single_file_rasterio(self, file_path, nodata_value=-9999):
+        """
+        Normalizes each band of a single Sentinel-2 data file to a range of 0-1,
+        and writes the normalized data as float32 to a new file with '_normalized' suffix.
 
+        Args:
+            file_path (str): Path to the Sentinel-2 data file.
+            nodata_value (int): Value to be treated as 'no data' and excluded from normalization.
+        """
+        if file_path.endswith('_sentinel.tif'):
+            # Create output file path by appending '_normalized' before the file extension
+            output_path = os.path.splitext(file_path)[0] + '_normalized.tif'
+
+            with rasterio.open(file_path) as src:
+                meta = src.meta
+
+                # Update the metadata to float32
+                meta.update(dtype=rasterio.float32)
+
+                # Create a new file for the normalized data
+                with rasterio.open(output_path, 'w', **meta) as dst:
+                    for i in range(1, src.count + 1):
+                        band = src.read(i)
+
+                        # Convert band to float32 for accurate division during normalization
+                        band = band.astype(np.float32)
+
+                        # Apply nodata mask
+                        valid_mask = band != nodata_value
+                        valid_data = band[valid_mask]
+
+                        # Avoid division by zero by ensuring there is variation in valid data
+                        if valid_data.max() != valid_data.min():
+                            # Normalize valid data
+                            min_val, max_val = valid_data.min(), valid_data.max()
+                            normalized_band = np.where(valid_mask, (band - min_val) / (max_val - min_val), nodata_value)
+
+                            # Write normalized band back
+                            dst.write(normalized_band, i)
+
+            print(f"Normalized file saved as: {output_path}")
 
     def plot_metrics_from_log(self, log_filename):
         # Regular expression patterns
@@ -375,50 +413,6 @@ class Loader:
 
         plt.tight_layout()
         plt.show()
-
-
-
-
-    # def plot_training_progress(self, checkpoint_dir):
-    #     metrics = {'loss': [], 'accuracy': []}  # Add more metrics as needed
-    #
-    #     # Step 1: Collect metrics from checkpoint files
-    #     for filename in sorted(os.listdir(checkpoint_dir)):
-    #         if filename.endswith('.json'):
-    #             with open(os.path.join(checkpoint_dir, filename)) as f:
-    #                 for line in f:
-    #                     try:
-    #                         data = json.loads(line)
-    #                         metrics['loss'].append(data['loss'])
-    #                         metrics['accuracy'].append(data['accuracy'])
-    #                     except json.JSONDecodeError:
-    #                         continue  # Skip lines that are not valid JSON
-    #
-    #                 data = json.load(f)
-    #                 # Assuming the JSON structure contains 'loss' and 'accuracy'
-    #                 metrics['loss'].append(data['loss'])
-    #                 metrics['accuracy'].append(data['accuracy'])
-    #
-    #     # Step 2: Plot the metrics
-    #     fig, ax1 = plt.subplots()
-    #
-    #     color = 'tab:red'
-    #     ax1.set_xlabel('Epoch')
-    #     ax1.set_ylabel('Loss', color=color)
-    #     ax1.plot(metrics['loss'], color=color)
-    #     ax1.tick_params(axis='y', labelcolor=color)
-    #
-    #     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-    #
-    #     color = 'tab:blue'
-    #     ax2.set_ylabel('Accuracy', color=color)
-    #     ax2.plot(metrics['accuracy'], color=color)
-    #     ax2.tick_params(axis='y', labelcolor=color)
-    #
-    #
-    #
-
-
 
 
 
