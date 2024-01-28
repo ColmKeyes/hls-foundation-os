@@ -2,7 +2,7 @@
 @Time    : [Time of Creation, e.g., 07/12/2023 10:00]
 @Author  : Colm Keyes
 @Email   : keyesco@tcd.ie
-@File    : model_functions
+@File    : model_run_input_processor.py
 """
 
 import rasterio
@@ -33,23 +33,30 @@ if __name__ == '__main__':
     # checkpoint_dir = r'E:\PycharmProjects\hls-foundation-os\Prithvi100m'
     # model_funcs.plot_training_progress(checkpoint_dir)
 
+
+    #######
+    ## Filter images based on minimal labels requirement
+    #######
+    ### choose stack to filter direction by
+    ###
+    alert_stacks = model_funcs.filter_stacks(source_dir, 1,1000)
+    distribution = model_funcs.calculate_alert_distribution(alert_stacks,5)
+    print(distribution)
+
+
+
+
+
     #######
     ## plot model variables
     #######
 
     #model_funcs.plot_metrics_from_log(r"E:\PycharmProjects\hls-foundation-os\Prithvi100m\20240115_183444.log")
 
-    #model_funcs.alter_radd_data_to_label(r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\validation")
 
 
 
-    #######
-    ## Filter images based on minimal labels requirement
-    #######
 
-    alert_stacks = model_funcs.filter_stacks(train_dir, 1,0)
-    distribution = model_funcs.calculate_alert_distribution(alert_stacks,5)
-    print(distribution)
 
     #######
     ## normalise and determine band mean and stddev for config file
@@ -60,3 +67,5 @@ if __name__ == '__main__':
     #
     # band_stats = model_funcs.calculate_band_statistics([train_dir,val_dir])
     # print(band_stats)
+
+    #model_funcs.normalize_single_file_rasterio(r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\training\corrected_HLS.S30.T49MFU.2022083T023551.v2.0.Fmask_3072_1024_sentinel.tif")
