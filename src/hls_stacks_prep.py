@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 This script provides a class and methods for preprocessing Sentinel-2 imagery data.
@@ -166,6 +167,22 @@ class prep:
             image_bounds = image_raster.bounds
             image_crs = image_raster.crs
 
+            # Extract the relevant parts of the file name from the sentinel_stack_path
+            tile, date = os.path.basename(sentinel_stack_path).split('_')[0].split('.')
+            #identifier = f"{parts[0]}_{parts[1]}"
+
+            # Assuming the base name of the single_image_path is 'resampled_radd_alerts_int16_compressed.tif'
+            suffix = os.path.basename(single_image_path)
+
+            # Combine the identifier and suffix to form the output file name
+            output_file_name = f"{date}_{tile}_{suffix}"
+            output_file_path = os.path.join(output_path, output_file_name)
+
+            if os.path.exists(output_file_path):
+                print(f"File {output_file_path} already exists. Skipping cropping.")
+                return  # Skip the rest of the function
+
+
             # Create transformers to WGS 84 (EPSG:4326)
             transformer_to_wgs84_sentinel = Transformer.from_crs(sentinel_crs, 'EPSG:4326', always_xy=True)
             transformer_to_wgs84_image = Transformer.from_crs(image_crs, 'EPSG:4326', always_xy=True)
@@ -198,9 +215,12 @@ class prep:
             image_cropped, transform = mask(image_raster, [sentinel_box_image_crs], crop=True, filled=False, pad=False, nodata=0)
 
             # Mask or clip the image raster to the area of the Sentinel-2 stack, specifying the nodata value and transform
-            #image_cropped, transform = mask(image_raster, [sentinel_box_wgs84], crop=True, filled=False, pad=False, nodata=0)
+            #mage_cropped, transform = mask(image_raster, [sentinel_box_wgs84], crop=True, filled=False, pad=False, nodata=0)
 
-            image_cropped[0][image_cropped[0] != 3] = 0
+            ########
+            ## Radd alerts contain values 2 and 3. 2 for uncertain events, 3 for hihgly certain events. we choose only certain events.
+            ########
+            image_cropped.mask[0] = (image_cropped.data[0] != 3)
 
             # Update the profile for the cropped image
             output_profile = image_raster.profile.copy()
@@ -211,95 +231,298 @@ class prep:
                 'count' : 1
             })
 
-            # Extract the relevant parts of the file name from the sentinel_stack_path
-            parts = os.path.basename(sentinel_stack_path).split('.')[0].split('_')
-            identifier = f"{parts[0]}_{parts[1]}"
 
-            # Assuming the base name of the single_image_path is 'resampled_radd_alerts_int16_compressed.tif'
-            suffix = os.path.basename(single_image_path)
-
-            # Combine the identifier and suffix to form the output file name
-            output_file_name = f"{identifier}_{suffix}"
-            output_file_path = os.path.join(output_path, output_file_name)
-
-            if os.path.exists(output_file_path):
-                print(f"File {output_file_path} already exists. Skipping cropping.")
-                return  # Skip the rest of the function
 
 
             with rasterio.open(output_file_path, 'w', **output_profile) as dest:
-                dest.write(image_cropped[1],1)
+                dest.write(image_cropped[1], 1)
+                print(f"written {output_file_path}")
+
 
     def write_hls_rasterio_stack(self):
         """
         Write folder of Sentinel-2 GeoTIFFs, corresponding Fmask, to a GeoTIFF stack file.
         """
+        # Create a dictionary to hold file paths for each tile-date combination
+        tile_date_files = {}
 
+        # Collect all band files into the dictionary
         for file in os.listdir(self.sentinel2_path):
             if any(band in file for band in self.bands) and file.endswith('.tif'):
-                sentinel_file = os.path.join(self.sentinel2_path, file)
+                # Extract tile and date information from the filename
+                parts = file.split('.')
+                tile_date_key = f'{parts[2]}.{parts[3][:7]}'  # Tile and Date
 
-                # Corresponding Fmask file
-                fmask_file_name = '.'.join(file.split('.')[:-2]) + '.Fmask.tif'
-                fmask_file = os.path.join(self.sentinel2_path, fmask_file_name)
+                if tile_date_key not in tile_date_files:
+                    tile_date_files[tile_date_key] = []
 
-                if not os.path.exists(fmask_file):
-                    continue  # Skip if corresponding Fmask file does not exist
+                tile_date_files[tile_date_key].append(os.path.join(self.sentinel2_path, file))
 
-                # Files to be stacked (only Sentinel-2 bands and Fmask)
-                files = [sentinel_file, fmask_file]
+        # Process each tile-date set of files
+        for tile_date, files in tile_date_files.items():
+            # Skip if not all bands are present
+            if len(files) != len(self.bands):
+                continue
 
-                # Read the first image to setup profile
-                with rasterio.open(sentinel_file) as src_image:
-                    dst_crs = src_image.crs
-                    dst_transform, dst_width, dst_height = calculate_default_transform(
-                        src_image.crs, dst_crs, src_image.width, src_image.height, *src_image.bounds)
+            # Sort the files to ensure they are in the correct band order
+            files.sort()
 
-                    # Create a profile for the stack
-                    dst_profile = src_image.profile.copy()
-                    dst_profile.update({
-                        "driver": "GTiff",
-                        "count": len(files),
-                        "crs": dst_crs,
-                        "transform": dst_transform,
-                        "width": dst_width,
-                        "height": dst_height
-                    })
+            # Read metadata of first file
+            with rasterio.open(files[0]) as src0:
+                meta = src0.meta
 
-                    # Create stack directory if it doesn't exist
-                    if not os.path.exists(self.stack_path_list):
-                        os.makedirs(self.stack_path_list)
+            # Update meta to reflect the number of layers
+            meta.update(count = len(files))
 
-                    stack_file = os.path.join(self.stack_path_list, f'{os.path.splitext(file)[0]}_stack.tif')
-                    with rasterio.open(stack_file, 'w', **dst_profile) as dst:
-                        for i, file_path in enumerate(files, start=1):
-                            with rasterio.open(file_path) as src:
-                                data = src.read(1)  # Read the first band
-                                dst.write(data, i)
+            # Write the stack
+            stack_file_path = os.path.join(self.stack_path_list, f'{tile_date}_stack.tif')
+            with rasterio.open(stack_file_path, 'w', **meta) as dst:
+                for id, layer in enumerate(files, start=1):
+                    with rasterio.open(layer) as src1:
+                        dst.write_band(id, src1.read(1))
 
-    def merge_with_agb(self, sentinel_stack_path, agb_path, output_path):
-        with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(agb_path) as agb:
-            # Check and reproject AGB data to match Sentinel-2 stack CRS and resolution
-            if agb.crs != sentinel_stack.crs or agb.res != sentinel_stack.res:
-                # Reproject and resample AGB data
-                # (Add reprojection and resampling code here)
-                pass
 
-            # Read and stack data
-            sentinel_data = sentinel_stack.read()
-            agb_data = agb.read(1)
+    def merge_with_agb(self, agb_path, output_path):
+        for sentinel_file in os.listdir(self.stack_path_list):
+            if sentinel_file.endswith('_stack.tif'):
+                sentinel_stack_path = os.path.join(self.stack_path_list, sentinel_file)
 
-            # Stack AGB data as an additional band to Sentinel-2 data
-            stacked_data = np.concatenate((sentinel_data, agb_data[None, :, :]), axis=0)
+                # Extract the tile and date from the Sentinel-2 file name
+                tile, date = sentinel_file.split('_')[0].split(".")
+                # Find the corresponding AGB file based on tile and date
+                agb_file_name = f"{tile}_{date}_Kalimantan_land_cover.tif"
+                agb_file_path = os.path.join(agb_path, agb_file_name)
 
-            # Update the profile for the output file
-            output_profile = sentinel_stack.profile.copy()
-            output_profile.update(count=sentinel_data.shape[0] + 1)
+                if not os.path.exists(agb_file_path):
+                    print(f"AGB file {agb_file_path} not found for {sentinel_file}. Skipping.")
+                    continue
 
-            # Write the stacked data to a new file
-            output_file = os.path.join(output_path, os.path.basename(sentinel_stack_path).replace('.tif', '_with_AGB.tif'))
-            with rasterio.open(output_file, 'w', **output_profile) as dest:
-                dest.write(stacked_data)
+                with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(agb_file_path) as agb:
+                    # Ensure AGB data is read with the same shape as the Sentinel-2 stack
+                    agb_data = agb.read(
+                        out_shape=(1, sentinel_stack.height, sentinel_stack.width),
+                        resampling=Resampling.nearest
+                    )
+
+                    # Stack AGB data as an additional band to Sentinel-2 data
+                    stacked_data = np.concatenate((sentinel_stack.read(), agb_data), axis=0)
+
+                    # Update the profile for the output file
+                    output_profile = sentinel_stack.profile.copy()
+                    output_profile.update(count=stacked_data.shape[0])
+
+                    # Write the stacked data to a new file
+                    output_file_name = sentinel_file.replace('_stack.tif', '_agb_stack.tif')
+                    output_file_path = os.path.join(output_path, output_file_name)
+                    with rasterio.open(output_file_path, 'w', **output_profile) as dst:
+                        dst.write(stacked_data)
+
+
+
+
+    def forest_loss_mask(self, sentinel_stacks, forest_loss_path, output_path, reference_year=2021):
+        for sentinel_file in os.listdir(sentinel_stacks):
+            if sentinel_file.endswith('_agb_radd_stack.tif'):
+                sentinel_stack_path = os.path.join(sentinel_stacks, sentinel_file)
+
+                with rasterio.open(sentinel_stack_path) as sentinel_stack:
+                    sentinel_data = sentinel_stack.read()
+                    sentinel_crs = sentinel_stack.crs
+                    output_profile = sentinel_stack.profile.copy()
+
+                    # Initialize a variable to track if any mask was applied
+                    mask_applied = False
+
+                    for forest_loss_file in os.listdir(forest_loss_path):
+                        if forest_loss_file.endswith(".tif"):
+                            forest_loss_file_path = os.path.join(forest_loss_path, forest_loss_file)
+                            with rasterio.open(forest_loss_file_path) as forest_loss:
+
+                                forest_loss_data = np.zeros((1, sentinel_stack.height, sentinel_stack.width), dtype=rasterio.float32)
+                                reproject(
+                                    source=rasterio.band(forest_loss, 1),
+                                    destination=forest_loss_data[0],
+                                    src_transform=forest_loss.transform,
+                                    src_crs=forest_loss.crs,
+                                    dst_transform=sentinel_stack.transform,
+                                    dst_crs=sentinel_crs,
+                                    resampling=Resampling.nearest)
+
+
+                                # Check file type and apply the corresponding mask
+                                if 'lossyear' in forest_loss_file:
+                                    current_year = reference_year - 2000  # Adjust based on your reference year format
+                                    mask_condition = (forest_loss_data[0] > 0) & (forest_loss_data[0] < current_year)
+                                    sentinel_data[:, mask_condition] = sentinel_stack.nodata
+                                    lossyear_mask_applied = True
+
+                                # elif 'treecover' in forest_loss_file:
+                                #     mask_condition = forest_loss_data[0] < 80
+                                #     sentinel_data[:, mask_condition] = sentinel_stack.nodata
+                                #     treecover_mask_applied = True
+
+
+                    # Check if both masks were applied
+                    if lossyear_mask_applied: # and treecover_mask_applied:
+                        output_profile = sentinel_stack.profile.copy()
+                        output_file_name = sentinel_file.replace('_agb_stack.tif', '_agb_forest_masked_stack.tif')
+                        output_file_path = os.path.join(output_path, output_file_name)
+                        with rasterio.open(output_file_path, 'w', **output_profile) as dst:
+                            dst.write(sentinel_data)
+                        print(f"loss_year mask applied and saved to {output_file_name}")
+                    else:
+                        print(f"Could not apply both masks for {sentinel_file}")
+
+
+
+    #
+    #
+    #
+    #
+    #
+    # def forest_loss_mask(self, sentinel_stacks, forest_loss_path, output_path, reference_year=2020):
+    #     for sentinel_file in os.listdir(sentinel_stacks):
+    #         if sentinel_file.endswith('_agb_radd_stack.tif'):  # Adjust as per your naming convention
+    #             sentinel_stack_path = os.path.join(sentinel_stacks, sentinel_file)
+    #             with rasterio.open(sentinel_stack_path) as sentinel_stack:
+    #                 sentinel_bounds = sentinel_stack.bounds
+    #                 sentinel_crs = sentinel_stack.crs
+    #
+    #                 for forest_loss_file in os.listdir(forest_loss_path):
+    #                     if forest_loss_file.endswith(".tif"):
+    #                         forest_loss_file_path = os.path.join(forest_loss_path, forest_loss_file)
+    #                         with rasterio.open(forest_loss_file_path) as forest_loss:
+    #                             # if not box(*sentinel_bounds).intersects(box(*forest_loss.bounds)):
+    #                             #     continue
+    #
+    #                             forest_loss_data = np.zeros((1, sentinel_stack.height, sentinel_stack.width), dtype=rasterio.float32)
+    #                             transform, width, height = calculate_default_transform(
+    #                                 forest_loss.crs, sentinel_crs, forest_loss.width, forest_loss.height, *forest_loss.bounds,
+    #                                 dst_width=sentinel_stack.width, dst_height=sentinel_stack.height)
+    #                             reproject(
+    #                                 source=rasterio.band(forest_loss, 1),
+    #                                 destination=forest_loss_data[0],
+    #                                 src_transform=forest_loss.transform,
+    #                                 src_crs=forest_loss.crs,
+    #                                 dst_transform=sentinel_stack.transform,
+    #                                 dst_crs=sentinel_crs,
+    #                                 resampling=Resampling.nearest)
+    #
+    #                             sentinel_data = sentinel_stack.read()
+    #
+    #                             # Check file type and apply mask
+    #                             if 'treecover' in forest_loss_file:
+    #                                 mask_condition = forest_loss_data[0] < 80
+    #                             elif 'lossyear' in forest_loss_file:
+    #                                 current_year = reference_year - 2000  # Adjust based on your reference year format
+    #                                 mask_condition = (forest_loss_data[0] > 0) & (forest_loss_data[0] < current_year)
+    #
+    #                             sentinel_data[:, mask_condition] = sentinel_stack.nodata
+    #
+    #                             output_profile = sentinel_stack.profile.copy()
+    #                             output_file_name = sentinel_file.replace('_agb_radd_stack.tif', '_agb_radd_forest_stack.tif')
+    #                             output_file_path = os.path.join(output_path, output_file_name)
+    #                             with rasterio.open(output_file_path, 'w', **output_profile) as dst:
+    #                                 dst.write(sentinel_data)
+    #                             print(f"Masked with {forest_loss_file} and saved to {output_file_name}")
+    #
+
+    #
+    # def forest_loss_mask(self, sentinel_stack_path, forest_loss_path, output_path, date_threshold):
+    #     """
+    #     Mask Sentinel-2 stack with Hansen forest loss data. Mask conditions vary by file type.
+    #
+    #     Args:
+    #         sentinel_stack_path (str): Path to the Sentinel-2 stack file.
+    #         forest_path (str): Directory containing Hansen forest loss data.
+    #         output_path (str): Output directory for the masked files.
+    #         date_threshold (int): Threshold year for the loss_year data.
+    #     """
+    #     # Define the CRS for WGS84
+    #     wgs84_crs = 'EPSG:4326'
+    #
+    #     for sentinel_file in os.listdir(sentinel_stack_path):
+    #         if sentinel_file.endswith('_stack.tif'):
+    #             sentinel_stack_full_path = os.path.join(sentinel_stack_path, sentinel_file)
+    #             tile, date = sentinel_file.split('_')[1], sentinel_file.split('_')[2]
+    #
+    #             # Identify the corresponding Hansen file
+    #             for forest_file in os.listdir(forest_loss_path):
+    #                 if tile in forest_file and ('treecover2000' in forest_file or 'loss_year' in forest_file):
+    #                     forest_full_path = os.path.join(forest_loss_path, forest_file)
+    #
+    #                     with rasterio.open(sentinel_stack_full_path) as sentinel, rasterio.open(forest_full_path) as forest:
+    #                         # Check if CRS and resolution match, otherwise reproject
+    #                         if sentinel.crs != forest.crs or sentinel.res != forest.res:
+    #                             # Perform re-projection as needed (example given in the previous function)
+    #                             pass
+    #
+    #                         # Determine mask condition based on file type
+    #                         if 'treecover2000' in forest_file:
+    #                             # Mask treecover2000 data: values < 80 are masked
+    #                             mask_condition = forest.read(1) < 80
+    #                         elif 'loss_year' in forest_file:
+    #                             # Mask loss_year data: mask all years before June 2021
+    #                             # Assuming loss_year data is encoded as years since 2000
+    #                             mask_year = forest.read(1) + 2000
+    #                             mask_condition = mask_year < date_threshold
+    #                         else:
+    #                             # Skip if file does not match expected patterns
+    #                             continue
+    #
+    #                         # Apply mask
+    #                         sentinel_data = sentinel.read()
+    #                         sentinel_data[:, mask_condition] = 0  # Assuming 0 is the nodata value
+    #
+    #                         # Write output
+    #                         output_file = os.path.join(output_path, sentinel_file.replace('_stack.tif', '_masked.tif'))
+    #                         with rasterio.open(output_file, 'w', **sentinel.profile) as dst:
+    #                             dst.write(sentinel_data)
+    #
+    #
+    #
+    # def forest_loss_mask(self, sentinel_stacks, forest_loss_path, output_path):
+    #     for sentinel_file in os.listdir(sentinel_stacks):
+    #         if sentinel_file.endswith('_agb_radd_stack.tif'):  # Assuming you're applying this after AGB merging
+    #             sentinel_stack_path = os.path.join(sentinel_stacks, sentinel_file)
+    #             with rasterio.open(sentinel_stack_path) as sentinel_stack:
+    #                 sentinel_bounds = sentinel_stack.bounds
+    #                 sentinel_crs = sentinel_stack.crs
+    #
+    #                 # Attempt to apply mask with each forest loss file
+    #                 for forest_loss_file_path in os.listdir(forest_loss_path):
+    #                     with rasterio.open(os.path.join(forest_loss_path,forest_loss_file_path)) as forest_loss:
+    #                         # Skip if there's no overlap
+    #                         if not box(*sentinel_bounds).intersects(box(*forest_loss.bounds)):
+    #                             continue
+    #
+    #                         # Reproject forest loss data to match Sentinel stack CRS and resolution
+    #                         forest_loss_data = np.zeros((1, sentinel_stack.height, sentinel_stack.width), dtype=rasterio.float32)
+    #                         transform, width, height = calculate_default_transform(
+    #                             forest_loss.crs, sentinel_stack.crs, forest_loss.width, forest_loss.height, *forest_loss.bounds,
+    #                             dst_width=sentinel_stack.width, dst_height=sentinel_stack.height)
+    #                         reproject(
+    #                             source=rasterio.band(forest_loss, 1),
+    #                             destination=forest_loss_data[0],
+    #                             src_transform=forest_loss.transform,
+    #                             src_crs=forest_loss.crs,
+    #                             dst_transform=transform,
+    #                             dst_crs=sentinel_stack.crs,
+    #                             resampling=Resampling.nearest)
+    #
+    #                         # Apply the mask
+    #                         sentinel_data = sentinel_stack.read()
+    #                         mask = forest_loss_data[0] < 80
+    #                         sentinel_data[:, mask] = sentinel_stack.nodata
+    #
+    #                         # Write the masked data to a new file
+    #                         output_profile = sentinel_stack.profile.copy()
+    #                         output_file_name = sentinel_file.replace('_with_agb.tif', '_masked.tif')
+    #                         output_file_path = os.path.join(output_path, output_file_name)
+    #                         with rasterio.open(output_file_path, 'w', **output_profile) as dst:
+    #                             dst.write(sentinel_data)
+    #                         print(f"Masked with {os.path.basename(forest_loss_file_path)} and saved to {output_file_name}")
+    #                         break  # Stop after successful masking
 
     """"""""
     # Utility Functionalities
@@ -339,7 +562,7 @@ class prep:
         with rasterio.open(input_file) as src:
             #  metadata for new raster with additional band
             meta = src.meta.copy()
-            meta.update(count=7)
+            meta.update(count=8)
 
             # Create the new raster file
             with rasterio.open(output_file, 'w', **meta) as dst:
@@ -351,7 +574,7 @@ class prep:
                     dst.write(data, band + 1)
 
     def apply_fmask(self, sentinel_stack_path, fmask_path, output_file):
-        CLOUD_BIT = 1 << 1     # Bit 1 for clouds
+        CLOUD_BIT = 1 << 1  # Bit 1 for clouds
         CLOUD_SHADOW_BIT = 1 << 3  # Bit 3 for cloud shadow
 
         with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(fmask_path) as fmask:
@@ -362,16 +585,48 @@ class prep:
             cloud_shadow_mask = (fmask_data & CLOUD_SHADOW_BIT) != 0
             combined_mask = cloud_mask | cloud_shadow_mask
 
-            masked_data = np.empty_like(sentinel_stack.read(), dtype=rasterio.float32)
+            # Prepare an array to hold the masked data
+            masked_data = np.zeros_like(sentinel_stack.read(), dtype=rasterio.float32)
+
+            # Apply mask and fill with nodata value
+            nodata_value = sentinel_stack.nodata #if sentinel_stack.nodata is not None else -9999  # Use sentinel stack's nodata value or a default
+
             for band in range(sentinel_stack.count):
                 band_data = sentinel_stack.read(band + 1)
-                masked_band = np.where(combined_mask, -9999, band_data)
-                masked_data[band] = masked_band
+                masked_data[band, :, :] = np.where(combined_mask, nodata_value, band_data)
 
+            # Update the profile for writing output
             output_profile = sentinel_stack.profile.copy()
-            output_profile.update(dtype=rasterio.float32, nodata=-9999)
+            output_profile.update(dtype=rasterio.float32, nodata=nodata_value)
+
             with rasterio.open(output_file, 'w', **output_profile) as dest:
                 dest.write(masked_data)
+    #
+    # def apply_fmask(self, sentinel_stack_path, fmask_path, output_file):
+    #     CLOUD_BIT = 1 << 1     # Bit 1 for clouds
+    #     CLOUD_SHADOW_BIT = 1 << 3  # Bit 3 for cloud shadow
+    #
+    #     with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(fmask_path) as fmask:
+    #         fmask_data = fmask.read(1)
+    #
+    #         # Cloud and cloud shadow masks
+    #         cloud_mask = (fmask_data & CLOUD_BIT) != 0
+    #         cloud_shadow_mask = (fmask_data & CLOUD_SHADOW_BIT) != 0
+    #         combined_mask = cloud_mask | cloud_shadow_mask
+    #
+    #         # masked_data = np.empty_like(sentinel_stack.read(), dtype=rasterio.float32)
+    #         for band in range(sentinel_stack.count):
+    #             band_data = sentinel_stack.read(band + 1)
+    #             # masked_band = np.where(combined_mask, -9999, band_data) -9999 is no good.
+    #             masked_data[band] = np.ma.masked_where(combined_mask, band_data)
+    #
+    #             ## now redundant
+    #             # masked_data[band] = masked_band
+    #
+    #         output_profile = sentinel_stack.profile.copy()
+    #         output_profile.update(dtype=rasterio.float32)#, nodata=-9999)
+    #         with rasterio.open(output_file, 'w', **output_profile) as dest:
+    #             dest.write(masked_data)
 
 
     """"""""
@@ -389,6 +644,23 @@ class prep:
         gdal.Warp(destNameOrDestDS=output_file,
                   srcDSOrSrcDSTab=input_files,
                   options=warp_options)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
