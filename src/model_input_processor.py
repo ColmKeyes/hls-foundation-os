@@ -23,6 +23,8 @@ import re
 import matplotlib.pyplot as plt
 from mmseg.datasets import CustomDataset
 from mmseg.datasets.builder import PIPELINES
+import datetime as dt
+from datetime import datetime
 
 class Loader:
 
@@ -97,36 +99,123 @@ class Loader:
                                 data = src.read(1)  # Read the first band
                                 dst.write(data, i)
 
-    def alter_radd_data_to_label(self, radd_tiles_path):
-        # Iterate over files in the training directory
-        for filename in os.listdir(radd_tiles_path):
-            if filename.endswith('.tif') and not filename.endswith('_.tif') and not filename.endswith('raddaltered.tif'):
-                radd_alert_path = os.path.join(radd_tiles_path, filename)
-                output_filename = os.path.splitext(filename)[0] + '_raddaltered.tif'
-                output_path = os.path.join(radd_tiles_path, output_filename)
+    def alter_radd_data_to_label(self, sentinel_stack_path):
+        # Convert the Sentinel stack date string to a datetime object
+        #sentinel_stack_date = datetime.datetime.strptime(sentinel_stack_date_str, "%Y%j").date()
 
-                # Open the RADD alert raster file
-                with rasterio.open(radd_alert_path) as src:
-                    # Read all the data (assuming the RADD data is in the first band)
-                    data = src.read()
+        for sentinel_stack in os.listdir(sentinel_stack_path):
+            if sentinel_stack.endswith('.tif') and not sentinel_stack.endswith('_radd.tif') and not sentinel_stack.endswith("sentinel.tif"):#sentinel_stack.endswith('_radd_modified.tif') and not sentinel_stack.endswith(""):
+                # Extract the date from the filename
+                sentinel_date_str = sentinel_stack.split('_')[0]
+                sentinel_date = dt.datetime.strptime(sentinel_date_str, "%Y%j").date()
 
-                    # Convert values greater than 0 to 1 in the first band
-                    radd_data = data[0, :, :]
-                    radd_data[radd_data > 0] = 1
-                    data[0, :, :] = radd_data  # Replace the first band with the altered data
+                sentinel_date_yydoy = int(datetime.strftime(sentinel_date, "%y%j"))
 
-                    # Save the altered data to the new file, including all bands
+                stack_path = os.path.join(sentinel_stack_path, sentinel_stack)
+
+                with rasterio.open(stack_path) as src:
                     profile = src.profile
-                    src.close()
-                    profile.update(count=data.shape[0])  # Update the count with the number of bands
-                    with rasterio.open(output_path, 'w', **profile) as dst:
-                        dst.write(data)
+                    #src.nodata = -9999
+                    radd_alerts = src.read(1)  # RADD alerts are assumed to be in the first band
+                    sentinel_data = src.read()[1:]  # Sentinel-2 data spans bands 2 to 7
+                    profile = src.profile
 
-                # Now remove the original file, after confirming the new file is written
-                file_to_delete = radd_alert_path
-                if os.path.exists(file_to_delete):
-                    os.remove(file_to_delete)
-                    print(f"Removed file {file_to_delete}")
+                    # Assuming your RADD alerts contain date information encoded in a specific way
+                    # For demonstration, we create a mask for alerts beyond the Sentinel date (this part needs your actual implementation)
+                    future_events_mask = radd_alerts > sentinel_date_yydoy
+
+                    # tile, date = os.path.basename(sentinel_stack_path).split('_')[0].split('.')
+
+                    nodata_value = -9999
+
+                    # Apply the future events mask to set these alerts to nodata
+                    radd_alerts[future_events_mask] = nodata_value
+
+                    # Convert remaining values greater than 0 to 1 (RADD alerts to binary)
+                    radd_alerts[radd_alerts > 0] = 1
+
+                    # Ensure the profile is updated with the correct nodata value
+                    profile.update(nodata=nodata_value)
+
+                    # Save the modified stack with updated RADD alerts
+                    output_filename = sentinel_stack.replace('.tif', '_radd_modified.tif')
+                    output_path = os.path.join(sentinel_stack_path, output_filename)
+                    with rasterio.open(output_path, 'w', **profile) as dst:
+                        dst.write(radd_alerts, 1)  # Write modified RADD alerts to band 1
+                        for i, band in enumerate(sentinel_data, start=2):  # Write original Sentinel-2 data back
+                            dst.write(band, i)
+                            #os.remove(sentinel_stack)
+                            print(f"Done applying radd future_mask, Wrote to: {output_path}")
+
+
+    #
+    # def alter_radd_data_to_label(self, radd_tiles_path):
+    #
+    #     # Iterate over RADD files in the directory
+    #     for filename in os.listdir(radd_tiles_path):
+    #         if filename.endswith('.tif') and not filename.endswith('_.tif') and not filename.endswith('raddaltered.tif'):
+    #             # Extract and parse the date from the RADD alert filename
+    #             sentinel_stack_date = datetime.datetime.strptime(filename.split('_')[0], "%Y%j").date()
+    #
+    #             radd_alert_path = os.path.join(radd_tiles_path, filename)
+    #             output_filename = os.path.splitext(filename)[0] + '_raddaltered.tif'
+    #             output_path = os.path.join(radd_tiles_path, output_filename)
+    #
+    #             # Open the RADD alert raster file
+    #             with rasterio.open(radd_alert_path) as src:
+    #                 data = src.read(1)  # Assuming RADD data is in the first band
+    #
+    #                 # Initialize a mask for future events
+    #                 future_events_mask = np.zeros(data.shape, dtype=bool)
+    #
+    #                 # If the RADD alert date is in the future relative to the sentinel stack, mask it out
+    #                 if data > sentinel_stack_date:
+    #                     future_events_mask[data > 0] = True  # Mask where RADD alerts exist
+    #
+    #                 # Apply the future events mask
+    #                 data[future_events_mask] = src.nodata  # Use the nodata value defined in the source file
+    #
+    #                 # Convert remaining values greater than 0 to 1
+    #                 data[data > 0] = 1
+    #
+    #                 # Update profile and save the altered data
+    #                 profile = src.profile
+    #                 with rasterio.open(output_path, 'w', **profile) as dst:
+    #                     dst.write(data, 1)  # Write modified data back to band 1
+    #
+    #                 print(f"Processed and saved {output_filename}")
+
+    #
+    # def alter_radd_data_to_label(self, radd_tiles_path):
+    #     # Iterate over files in the training directory
+    #     for filename in os.listdir(radd_tiles_path):
+    #         if filename.endswith('.tif') and not filename.endswith('_.tif') and not filename.endswith('raddaltered.tif'):
+    #             radd_alert_path = os.path.join(radd_tiles_path, filename)
+    #             output_filename = os.path.splitext(filename)[0] + '_raddaltered.tif'
+    #             output_path = os.path.join(radd_tiles_path, output_filename)
+    #
+    #             # Open the RADD alert raster file
+    #             with rasterio.open(radd_alert_path) as src:
+    #                 # Read all the data (assuming the RADD data is in the first band)
+    #                 data = src.read()
+    #
+    #                 # Convert values greater than 0 to 1 in the first band
+    #                 radd_data = data[0, :, :]
+    #                 radd_data[radd_data > 0] = 1
+    #                 data[0, :, :] = radd_data  # Replace the first band with the altered data
+    #
+    #                 # Save the altered data to the new file, including all bands
+    #                 profile = src.profile
+    #                 src.close()
+    #                 profile.update(count=data.shape[0])  # Update the count with the number of bands
+    #                 with rasterio.open(output_path, 'w', **profile) as dst:
+    #                     dst.write(data)
+    #
+    #             # Now remove the original file, after confirming the new file is written
+    #             file_to_delete = radd_alert_path
+    #             if os.path.exists(file_to_delete):
+    #                 os.remove(file_to_delete)
+    #                 print(f"Removed file {file_to_delete}")
 
 
 
@@ -139,31 +228,143 @@ class Loader:
             min_alert_pixels (int): Minimum number of alert pixels required to keep a stack.
         """
         alert_counts = []
+        file_names = []
         for file in os.listdir(stack_directory):
-            if file.endswith(".tif"):#_radd.tif'):
+            #if file.endswith("fmask_stack.tif") or (stack_directory.endswith("Tiles_512_30pc_cc") and file.endswith(".tif")):
+            if file.endswith("_radd.tif"):
+
                 file_path = os.path.join(stack_directory, file)
 
                 with rasterio.open(file_path) as src:
                     radd_alerts = src.read(1)  # Assuming the RADD alert band is the first band
-                    alert_count = np.count_nonzero(radd_alerts > 0)    ### alert_label_value)
+                    alert_count = np.count_nonzero(radd_alerts > 0)  ### alert_label_value)
                     print(f"file:{file}, alert count: {alert_count}")
                     alert_counts.append(alert_count)
-
+                    file_names.append(file)  # Keep track of the file names
 
                     src.close()
                     if alert_count < min_alert_pixels:
                         base_name = file.replace('_radd.tif', '')
-                        for suffix in [".tif",'_radd_.tif', '_radd.tif', '_sentinel.tif']:
-                            file_to_delete = os.path.join(stack_directory, f"{base_name}")
+                        for suffix in [".tif", '_radd_.tif', '_radd.tif', '_sentinel.tif',"_sentinel_normalized.tif"]:
+                            file_to_delete = os.path.join(stack_directory, f"{base_name}{suffix}")  # Ensure to add the suffix when deleting
                             if os.path.exists(file_to_delete):
                                 os.remove(file_to_delete)
                                 print(f"Removed file {file_to_delete}")
 
-
                         print(f"Removed stack {file} due to insufficient RADD alerts:{alert_count}.")
 
+        # Find and print the file with the maximum alerts
+        if alert_counts:  # Ensure there are alert counts to process
+            max_alert_count = max(alert_counts)
+            max_index = alert_counts.index(max_alert_count)
+            max_alert_file = file_names[max_index]
+
+            min_alert_count = min(alert_counts)
+            min_index = alert_counts.index(min_alert_count)
+            min_alert_file = file_names[min_index]
+
+            print(f"The file with the maximum alerts is '{max_alert_file}' with {max_alert_count} alerts.")
+            print(f"The file with the minimum alerts is '{min_alert_file}' with {min_alert_count} alerts.")
+        else:
+            print("No alert counts to process.")
+
+        # alert_counts = []
+        # for file in os.listdir(stack_directory):
+        #     if file.endswith("fmask_stack.tif") or (stack_directory.endswith("Tiles_512_30pc_cc") and file.endswith(".tif")):
+        #         file_path = os.path.join(stack_directory, file)
+        #
+        #         with rasterio.open(file_path) as src:
+        #             radd_alerts = src.read(1)  # Assuming the RADD alert band is the first band
+        #             alert_count = np.count_nonzero(radd_alerts > 0)    ### alert_label_value)
+        #             print(f"file:{file}, alert count: {alert_count}")
+        #             alert_counts.append(alert_count)
+        #
+        #
+        #             src.close()
+        #             if alert_count < min_alert_pixels:
+        #                 base_name = file.replace('_radd.tif', '')
+        #                 for suffix in [".tif",'_radd_.tif', '_radd.tif', '_sentinel.tif']:
+        #                     file_to_delete = os.path.join(stack_directory, f"{base_name}")
+        #                     if os.path.exists(file_to_delete):
+        #                         os.remove(file_to_delete)
+        #                         print(f"Removed file {file_to_delete}")
+        #
+        #
+        #                 print(f"Removed stack {file} due to insufficient RADD alerts:{alert_count}.")
+        #
 
         return alert_counts
+
+    def filter_stacks_and_radd_by_AGB(self, input_folder, output_folder, valid_classes=[2, 3, 4, 5], nodata_value=-9999):
+        """
+        Filters Sentinel stacks and corresponding RADD alert files by AGB land classification.
+        # 1 = Intact Lowland Forest
+        # 2 = Intact Montane Forest
+        # 3 = Secondary and Degraded Forest
+        # 4 = Peat Swamp Forest
+        # 5 = Mangrove Forest
+        # 6 = Swamp Scrublands
+        # 7 = Crops/Agriculture
+        # 8 = Tree Plantations
+        # 9 = Urban/Settlement
+        # 10 = Scrublands
+        # 11 = Inland Water
+        Args:
+            input_folder (str): Path to the folder containing Sentinel and RADD files.
+            output_folder (str): Path to the folder where filtered files will be saved.
+            valid_classes (list): AGB class values to retain.
+            nodata_value (int): No-data value for filtered pixels.
+        """
+        # Ensure output folder exists
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        # Iterate over Sentinel stack files in the input folder
+        for filename in os.listdir(input_folder):
+            if filename.endswith('_sentinel_normalized.tif'):  # Adjust based on your file naming convention
+                sentinel_file_path = os.path.join(input_folder, filename)
+                # Construct RADD alert file name based on Sentinel file name
+                radd_filename = filename.replace('_sentinel_normalized.tif', '_radd.tif')
+                radd_file_path = os.path.join(input_folder, radd_filename)
+
+                # Process Sentinel stack
+                with rasterio.open(sentinel_file_path) as sentinel_src:
+                    agb_classification = sentinel_src.read(7)  # Assuming 7th band is AGB classification
+                    agb_mask = np.isin(agb_classification, valid_classes)
+
+                    # Apply AGB mask to Sentinel data and RADD alerts
+                    output_sentinel_path = os.path.join(output_folder, f"filtered_{filename}")
+                    self.apply_mask_and_save(sentinel_src, agb_mask, output_sentinel_path, nodata_value)
+
+                # Process corresponding RADD alert file if it exists
+                if os.path.exists(radd_file_path):
+                    with rasterio.open(radd_file_path) as radd_src:
+                        output_radd_path = os.path.join(output_folder, f"filtered_{radd_filename}")
+                        self.apply_mask_and_save(radd_src, agb_mask, output_radd_path, nodata_value)
+
+    def apply_mask_and_save(self, src, mask, output_path, nodata_value):
+        """
+        Applies a mask to all bands of the source dataset and saves to a new file.
+
+        Args:
+            src (rasterio.DatasetReader): Source dataset.
+            mask (numpy.ndarray): Mask to apply.
+            output_path (str): Path to save the filtered file.
+            nodata_value (int): No-data value for filtered pixels.
+        """
+        masked_data = np.empty_like(src.read(), dtype=src.dtypes[0])
+        for i in range(src.count):
+            band_data = src.read(i + 1)
+            masked_data[i] = np.where(mask, band_data, nodata_value)
+
+        # Prepare output file with updated profile
+        output_profile = src.profile.copy()
+        output_profile.update(nodata=nodata_value)
+
+        # Write the masked data to a new file
+        with rasterio.open(output_path, 'w', **output_profile) as dst:
+            dst.write(masked_data)
+        print(f"Processed and saved to {output_path}")
 
     def calculate_alert_distribution(self, alert_counts, num_groups=5):
         """
@@ -177,6 +378,11 @@ class Loader:
             dict: A dictionary with the range as keys and count of alerts in each range as values.
         """
         max_alert_count = max(alert_counts)
+        max_index = alert_counts.index(max_alert_count)
+        min_alert_count = min(alert_counts)
+        min_index = alert_counts.index(min_alert_count)
+        print(f"{max_index} is the max alert_count index, {max(alert_counts)} is the max counts.")
+        print(f"{min_index} is the min alert_count index, {min(alert_counts)} is the min counts.")
         min_alert_count = min(alert_counts)
         range_size = (max_alert_count - min_alert_count) / num_groups
         distribution = {}
@@ -191,6 +397,8 @@ class Loader:
             # Count how many alerts fall into this range
             count = sum(lower_bound <= count <= upper_bound for count in alert_counts)
             distribution[f"{lower_bound:.2f}-{upper_bound:.2f}"] = count
+
+
 
         return distribution
 
@@ -214,7 +422,7 @@ class Loader:
 
         for directory in directories:
             for file in os.listdir(directory):
-                if file.endswith('_sentinel.tif'):
+                if file.endswith('_sentinel_normalized.tif'):
                     file_path = os.path.join(directory, file)
 
                     with rasterio.open(file_path) as src:
@@ -238,78 +446,152 @@ class Loader:
 
         return {"means": means, "stds": stds}
 
-    def normalize_data(self, directory, nodata_value=-9999):
+
+
+    def find_global_min_max(self, folder_path, nodata_value=-9999):
         """
-        Normalizes each band of the Sentinel-2 data in the given directory to a range of 0-1,
-        ignoring specified nodata values.
-
-        Args:
-            directory (str): Directory containing Sentinel-2 data files.
-            nodata_value (int): Value to be treated as 'no data' and excluded from normalization.
+        Finds the global minimum and maximum values across the first 6 bands of all Sentinel-2 data files in a folder,
+        excluding no-data and values below zero.
         """
-        for file in os.listdir(directory):
-            if file.endswith('_sentinel.tif'):
-                file_path = os.path.join(directory, file)
+        global_min = np.inf
+        global_max = -np.inf
 
-                with rasterio.open(file_path, 'r+') as src:
-                    bands = src.read()
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith('_sentinel_normalized.tif'):
+                file_path = os.path.join(folder_path, file_name)
+                with rasterio.open(file_path) as src:
+                    for i in range(1, 7):  # Only consider the first 6 bands
+                        band = src.read(i).astype(np.float32)
+                        valid_mask = (band != nodata_value) & (band >= 0)
+                        valid_data = band[valid_mask]
 
-                    # Normalize each band individually
-                    normalized_bands = np.zeros_like(bands, dtype=np.float32)
-                    for i, band in enumerate(bands):
-                        valid_mask = band != nodata_value
-                        valid_band = band[valid_mask]
-                        max_value = valid_band.max()
-                        # if max_value > 1:
-                        #     print("yo")
-                        min_value = valid_band.min()
-                        normalized_band = np.where(valid_mask, (band - min_value) / (max_value - min_value), nodata_value)
-                        normalized_bands[i] = normalized_band
+                        if valid_data.size > 0:  # Check if there's any valid data
+                            band_min = valid_data.min()
+                            band_max = valid_data.max()
 
-                    # Write the normalized data back to the file
-                    src.write(normalized_bands)
+                            if band_min < global_min:
+                                global_min = band_min
+                            if band_max > global_max:
+                                global_max = band_max
+        print(f"Global Max: {global_max}, Global Min: {global_min}")
+        return global_min, global_max
+
+    def normalize_dataset(self, folder_path, nodata_value=-9999):
+        """
+        Normalizes all Sentinel-2 data files in a folder using global min and max values.
+        """
+        global_min, global_max = self.find_global_min_max(folder_path, nodata_value)
+
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith('_sentinel_normalized.tif'):
+                file_path = os.path.join(folder_path, file_name)
+                output_path = os.path.splitext(file_path)[0] + '_DS_normalized.tif'
+
+                with rasterio.open(file_path) as src:
+                    meta = src.meta
+                    meta.update(dtype=rasterio.float32)
+
+                    with rasterio.open(output_path, 'w', **meta) as dst:
+                        for i in range(1, src.count + 1):
+                            band = src.read(i).astype(np.float32)
+
+                            if i <= 6:  # Normalize the first 6 bands
+                                valid_mask = (band != nodata_value) & (band >= 0)
+                                normalized_band = np.where(valid_mask, (band - global_min) / (global_max - global_min), nodata_value)
+                                dst.write_band(i, normalized_band)
+
+                            else:  # Directly add the 7th band without normalization
+                                dst.write_band(i, band)
+                #os.remove(file_path)
+                print(f"Normalized file saved as: {output_path}")
+
+
+
 
     def normalize_single_file_rasterio(self, file_path, nodata_value=-9999):
         """
-        Normalizes each band of a single Sentinel-2 data file to a range of 0-1,
-        and writes the normalized data as float32 to a new file with '_normalized' suffix.
+        Normalizes the first 6 bands of a Sentinel-2 data file to a range of 0-1,
+        excluding no-data and values below zero. The 7th band, assumed to be a LULC classification band,
+        is added without normalization. The output data is written as float32
+        to a new file with '_normalized' suffix.
 
         Args:
             file_path (str): Path to the Sentinel-2 data file.
             nodata_value (int): Value to be treated as 'no data' and excluded from normalization.
         """
         if file_path.endswith('_sentinel.tif'):
-            # Create output file path by appending '_normalized' before the file extension
             output_path = os.path.splitext(file_path)[0] + '_normalized.tif'
 
             with rasterio.open(file_path) as src:
                 meta = src.meta
-
-                # Update the metadata to float32
                 meta.update(dtype=rasterio.float32)
 
-                # Create a new file for the normalized data
                 with rasterio.open(output_path, 'w', **meta) as dst:
-                    for i in range(1, src.count + 1):
-                        band = src.read(i)
+                    for i in range(1, src.count + 1):  # Process all bands
+                        band = src.read(i).astype(np.float32)
 
-                        # Convert band to float32 for accurate division during normalization
-                        band = band.astype(np.float32)
+                        if i <= 6:  # Normalize the first 6 bands
+                            valid_mask = (band != nodata_value) & (band >= 0)
+                            band_masked = np.ma.masked_array(band, ~valid_mask)
 
-                        # Apply nodata mask
-                        valid_mask = band != nodata_value
-                        valid_data = band[valid_mask]
+                            if np.ma.is_masked(band_masked):
+                                min_val = band_masked.min()
+                                max_val = band_masked.max()
 
-                        # Avoid division by zero by ensuring there is variation in valid data
-                        if valid_data.max() != valid_data.min():
-                            # Normalize valid data
-                            min_val, max_val = valid_data.min(), valid_data.max()
-                            normalized_band = np.where(valid_mask, (band - min_val) / (max_val - min_val), nodata_value)
+                                # Normalize valid data
+                                band_normalized = (band_masked - min_val) / (max_val - min_val)
+                                band_normalized.fill_value = nodata_value
+                                dst.write_band(i, band_normalized.filled())
 
-                            # Write normalized band back
-                            dst.write(normalized_band, i)
-
+                        else:  # Directly add the 7th band without normalization
+                            dst.write_band(i, band)
+            os.remove(file_path)
             print(f"Normalized file saved as: {output_path}")
+
+    #
+    #
+    # def normalize_single_file_rasterio(self, file_path ,nodata_value=-9999):
+    #     """
+    #     Normalizes each band of a single Sentinel-2 data file to a range of 0-1,
+    #     and writes the normalized data as float32 to a new file with '_normalized' suffix.
+    #
+    #     Args:
+    #         file_path (str): Path to the Sentinel-2 data file.
+    #         nodata_value (int): Value to be treated as 'no data' and excluded from normalization.
+    #     """
+    #     if file_path.endswith('_sentinel.tif'):
+    #         # Create output file path by appending '_normalized' before the file extension
+    #         output_path = os.path.splitext(file_path)[0] + '_normalized.tif'
+    #
+    #         with rasterio.open(file_path) as src:
+    #             meta = src.meta
+    #
+    #             # Update the metadata to float32
+    #             meta.update(dtype=rasterio.float32)
+    #
+    #             # Create a new file for the normalized data
+    #             with rasterio.open(output_path, 'w', **meta) as dst:
+    #                 for i in range(1, src.count): #only first 6 bands, 7th is classification#+ 1):
+    #                     band = src.read(i).astype(np.float32)
+    #
+    #                     # Mask for valid data: not no-data and >= 0
+    #                     valid_mask = (band != nodata_value) & (band >= 0)
+    #
+    #                     # Prepare a masked array, keeping spatial structure
+    #                     band_masked = np.ma.masked_array(band, ~valid_mask)
+    #
+    #                     # Normalize only valid data
+    #                     if np.ma.is_masked(band_masked):
+    #                         min_val = band_masked.min()
+    #                         max_val = band_masked.max()
+    #
+    #                         # Normalize valid data
+    #                         band_normalized = (band_masked - min_val) / (max_val - min_val)
+    #                         band_normalized.fill_value = nodata_value
+    #                         dst.write_band(i, band_normalized.filled())
+    #                         #os.remove(file_path)
+    #
+    #         print(f"Normalized file saved as: {output_path}")
 
     def plot_metrics_from_log(self, log_filename):
         # Regular expression patterns
@@ -414,5 +696,66 @@ class Loader:
         plt.tight_layout()
         plt.show()
 
+    def plot_bands(self, sentinel_path, radd_path):
+        band_labels = ['RADD Alert', 'Red Band', 'Green Band', 'Blue Band', 'NIR Band', 'SWIR1 Band', 'SWIR2 Band']
+
+        # Initialize plot
+        fig, axs = plt.subplots(2, 4, figsize=(24, 12), sharex =True, sharey = True)  # Adjust for 8 subplots
+        fig.suptitle('Combined Bands Visualization', fontsize=16)
+
+        # Plot RADD band
+        with rasterio.open(radd_path) as src:
+            radd_band = src.read(1)  # Assuming RADD data is in the first band
+            radd_band = np.where(radd_band == -9999, np.nan, radd_band)
+            im = axs[0, 0].imshow(radd_band, cmap='gray', vmin=0, vmax=np.nanmax(radd_band))
+            axs[0, 0].set_title(band_labels[0])
+            plt.colorbar(im, ax=axs[0, 0], fraction=0.046, pad=0.04)
+
+        # Plot Sentinel bands
+        with rasterio.open(sentinel_path) as src:
+            for i in range(1, 7):  # Six Sentinel bands
+                band = src.read(i)
+                band = np.where(band == -9999, np.nan, band)
+                row, col = divmod(i, 4)
+                im = axs[row, col].imshow(band, cmap='gray', vmin=0, vmax=np.nanmax(band))
+                axs[row, col].set_title(band_labels[i])
+                plt.colorbar(im, ax=axs[row, col], fraction=0.046, pad=0.04)
+
+        # Hide unused subplot
+        axs[1, 3].axis('off')
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        # plt.show()
+        plt.pause(10)
+
+
+    def find_pairs(self, directory, sentinel_suffix="_sentinel.tif", radd_suffix="_radd.tif"):
+        files = os.listdir(directory)
+        sentinel_files = [f for f in files if f.endswith(sentinel_suffix)]
+        radd_files = [f for f in files if f.endswith(radd_suffix)]
+
+        pairs = []
+        for sen_file in sentinel_files:
+            base_name = sen_file.replace(sentinel_suffix, "")
+            matching_radd = base_name + radd_suffix
+            if matching_radd in radd_files:
+                pairs.append((sen_file, matching_radd))
+        return pairs
+
+    def replace_nodata_values(self, input_filepath, output_filepath, old_nodata_value=-9999, new_nodata_value=np.nan):
+
+        with rasterio.open(input_filepath) as src:
+            # Read the entire array
+            data = src.read()
+
+            # Replace -9999 with new_nodata_value for all bands
+            data[data == old_nodata_value] = new_nodata_value
+
+            # Copy the metadata
+            new_meta = src.meta.copy()
+            # Update the metadata with new nodata value
+            new_meta.update(nodata=new_nodata_value)
+
+            with rasterio.open(output_filepath, 'w', **new_meta) as dst:
+                dst.write(data)
 
 

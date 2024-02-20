@@ -54,13 +54,13 @@ class DatasetManagement:
     ## Crop radd_sen2 stack to 512 tile size
     ##########
 
-    def crop_to_tiles(self, image_path):
+    def crop_to_tiles(self, image_path, output_folder):
         with rasterio.open(image_path) as src:
             for j in range(0, src.height, self.tile_size):
                 for i in range(0, src.width, self.tile_size):
                     # Save each tile
                     tile_filename = f"{os.path.splitext(os.path.basename(image_path))[0]}_{i}_{j}.tif"
-                    tile_path = os.path.join(self.output_folder, tile_filename)
+                    tile_path = os.path.join(output_folder, tile_filename)
 
                     if os.path.exists(tile_path):
                         continue
@@ -92,7 +92,7 @@ class DatasetManagement:
     def split_tiles(self, source_folder):
 
         for file in os.listdir(source_folder):
-            if file.endswith('.tif') and not file.endswith('radd.tif') and not  file.endswith('sentinel.tif') :
+            if file.endswith('_radd_modified.tif') and not file.endswith('radd.tif') and not  file.endswith('sentinel.tif') :
                 file_path = os.path.join(source_folder, file)
 
                 with rasterio.open(file_path) as src:
