@@ -121,7 +121,10 @@ def inference_on_file(model, target_image, output_image, custom_test_pipeline):
         mask = open_tiff(target_image)
         meta = get_meta(target_image)
         mask = np.where(mask == meta['nodata'], 1, 0)
-        mask = np.max(mask, axis=0)[None]
+        mask = mask[:, :, 0]
+        # mask = np.max(mask, axis=0)[None]
+
+        # mask = mask[:, :, 0]
 
         result[0] = np.where(mask == 1, -1, result[0])
 
@@ -186,8 +189,9 @@ def inference_on_files(config_path, ckpt, input_type, input_path, output_path, b
     for i, target_image in enumerate(target_images):
         
         print(f'Working on Image {i}')
-        output_image = output_path+target_image.split("/")[-1].replace('.' + input_type, '_pred.'+input_type)
-        
+        #output_image = output_path+target_image.split(r"\\")[-1].replace('.' + input_type, '_pred.'+input_type)
+        output_image = target_image.split(r"\\")[-1].replace('.' + input_type, '_pred.'+input_type)
+
         inference_on_file(model, target_image, output_image, custom_test_pipeline)
 
 def main():
@@ -204,4 +208,5 @@ def main():
     inference_on_files(config_path, ckpt, input_type, input_path, output_path, bands)
     
 if __name__ == "__main__":
+
     main()
