@@ -33,10 +33,8 @@ class PlotIterationHook(Hook):
             model_output = runner.outputs
 
             img = data_batch['img'].data[0].cpu().numpy()
-            prediction = model_output[0].cpu().numpy()
-
             img = img.transpose(1, 2, 0)  # Assuming PyTorch format (C, H, W) to (H, W, C)
-            prediction = np.argmax(prediction, axis=0)  # Assuming prediction is in a one-hot format
+
 
             # Plotting
             plt.figure(figsize=(12, 6))
@@ -44,7 +42,3 @@ class PlotIterationHook(Hook):
             plt.imshow(img)
             plt.title(f'Input Image at Iteration {runner.iter}')
 
-            plt.subplot(1, 2, 2)
-            plt.imshow(prediction)
-            plt.title(f'Prediction at Iteration {runner.iter}')
-            plt.show()

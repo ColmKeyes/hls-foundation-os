@@ -23,12 +23,12 @@ cudnn_benchmark = True
 dataset_type = "GeospatialDataset"
 
 # TO BE DEFINED BY USER: data directory ok
-data_root = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc"
+data_root = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\small_sample_test"
 
 num_frames = 1
 img_size = 224
 num_workers = 1
-samples_per_gpu = 8
+samples_per_gpu = 24
 
 img_norm_cfg = dict(
 means=[190.25926138433516, 429.89401106101735, 263.64892182260917, 2914.742437197362, 1436.1499327360475, 552.0405896092034],
@@ -74,8 +74,8 @@ embed_dim = 768
 num_heads = 12
 tubelet_size = 1
 output_embed_dim = num_frames*embed_dim
-max_intervals = 300
-evaluation_interval = 100
+max_intervals = 1000
+evaluation_interval = 1000
 
 # TO BE DEFINED BY USER: model path
 experiment = "Prithvi-100m"
@@ -259,7 +259,7 @@ workflow = [("train", 1)]
 norm_cfg = dict(type="BN", requires_grad=True)
 model = dict(
     type="TemporalEncoderDecoder",
-    frozen_backbone=False,
+    frozen_backbone=True, #False,
     backbone=dict(
         type="TemporalViTEncoder",
         pretrained=pretrained_weights_path,
