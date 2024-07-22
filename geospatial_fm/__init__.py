@@ -3,7 +3,7 @@ from .geospatial_pipelines import (
     TorchRandomCrop,
     LoadGeospatialAnnotations,
     LoadGeospatialImageFromFile,
-    Reshape,
+    Reshape_unet,
     CastTensor,
     CollectTestList,
     TorchPermute

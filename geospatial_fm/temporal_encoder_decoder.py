@@ -9,7 +9,7 @@ from mmseg.models import builder
 from mmseg.models.builder import SEGMENTORS
 from mmseg.models.segmentors.base import BaseSegmentor
 from mmseg.models.segmentors.encoder_decoder import EncoderDecoder
-
+import matplotlib.pyplot as plt
 
 @SEGMENTORS.register_module()
 class TemporalEncoderDecoder(EncoderDecoder):
@@ -82,7 +82,7 @@ class TemporalEncoderDecoder(EncoderDecoder):
         h_stride, w_stride = self.test_cfg.stride
         h_crop, w_crop = self.test_cfg.crop_size
         
-        #### size and bactch size over last two dimensions ###
+        #### size and batch size over last two dimensions ###
         img_size = img.size()
         batch_size = img_size[0]
         h_img = img_size[-2]
@@ -174,7 +174,7 @@ class TemporalEncoderDecoder(EncoderDecoder):
         Returns:
             Tensor: The output segmentation map.
         """
-
+        import matplotlib.pyplot as plt
         assert self.test_cfg.mode in ['slide', 'whole']
         ori_shape = img_meta[0]['ori_shape']
         assert all(_['ori_shape'] == ori_shape for _ in img_meta)
@@ -199,7 +199,6 @@ class TemporalEncoderDecoder(EncoderDecoder):
             elif flip_direction == "vertical":
                 output = output.flip(dims=(2,))
         return output
-
     def simple_test(self, img, img_meta, rescale=True):
         """Simple test with single image."""
         seg_logit = self.inference(img, img_meta, rescale)
@@ -215,3 +214,13 @@ class TemporalEncoderDecoder(EncoderDecoder):
         # unravel batch dim
         seg_pred = list(seg_pred)
         return seg_pred
+
+
+
+# img1 = img[0][0][0].detach().cpu().numpy()
+# plt.imshow(img1)
+# plt.pause(1)
+# output = F.softmax(seg_logit, dim=1)
+# output1 = output[0][0].detach().cpu().numpy()
+# plt.imshow(output1)
+# plt.pause(1)

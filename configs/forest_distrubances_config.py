@@ -34,7 +34,13 @@ img_norm_cfg = dict(
 means=[190.25926138433516, 429.89401106101735, 263.64892182260917, 2914.742437197362, 1436.1499327360475, 552.0405896092034],
          stds=[147.77000967917303, 181.20171057982083, 215.94822142698277, 560.9504799450765, 380.71293248398223, 229.565368633047])
 
+COH:
+Global means after normalization: [0.3583233  0.34587905]
+Global standard deviations after normalization: [0.16327385 0.15160857]
 
+BSC:
+Global means after normalization: [0.03025329 0.07961972]
+Global standard deviations after normalization: [0.01407666 0.03714384]
 
 
     # means=[
@@ -236,21 +242,22 @@ evaluation = dict(
 )
 
 loss_func = dict(
-#     type="FocalLoss",
-#     use_sigmoid=True,
-#     gamma=2.0,
-#     alpha=0.5,
-#     reduction='mean',
-#     class_weight=None,  # Replace with a list of class weights if available
-#     loss_weight=1.0,
-#     loss_name='loss_focal'
-# )
+    type="FocalLoss",
+    use_sigmoid=True,
+    gamma=2.0,
+    alpha=0.5,
+    reduction='mean',
+    class_weight=None,  # Replace with a list of class weights if available
+    loss_weight=1.0,
+    loss_name='loss_focal',
+ignore_index=0
+)
 
-
-    type="DiceLoss",
-    use_sigmoid=False,
-    loss_weight=1,
-    ignore_index=-1)
+    #
+    # type="DiceLoss",
+    # use_sigmoid=False,
+    # loss_weight=1,
+    # ignore_index=-1)
 
 
 

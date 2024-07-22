@@ -168,19 +168,21 @@ class prep:
             image_crs = image_raster.crs
 
             # Extract the relevant parts of the file name from the sentinel_stack_path
-            tile, date = os.path.basename(sentinel_stack_path).split('_')[0].split('.')
+            #tile, date = os.path.basename(sentinel_stack_path).split('_')[0].split('.')
+            date = os.path.basename(sentinel_stack_path).split('_')[0].split('.')
+
             #identifier = f"{parts[0]}_{parts[1]}"
 
             # Assuming the base name of the single_image_path is 'resampled_radd_alerts_int16_compressed.tif'
             suffix = os.path.basename(single_image_path)
 
             # Combine the identifier and suffix to form the output file name
-            output_file_name = f"{date}_{tile}_{suffix}"
+            output_file_name = f"{date}_{suffix}"#f"{date}_{tile}_{suffix}"
             output_file_path = os.path.join(output_path, output_file_name)
 
             if os.path.exists(output_file_path):
                 print(f"File {output_file_path} already exists. Skipping cropping.")
-                return  # Skip the rest of the function
+                return output_file_path # Skip the rest of the function
 
 
             # Create transformers to WGS 84 (EPSG:4326)
@@ -228,7 +230,7 @@ class prep:
                 'height': image_cropped.shape[1],
                 'width': image_cropped.shape[2],
                 'transform': transform,
-                'count' : 1
+                'count' : image_raster.count  #1 ##is 1 for a single band crop 
             })
 
 
@@ -237,7 +239,7 @@ class prep:
             with rasterio.open(output_file_path, 'w', **output_profile) as dest:
                 dest.write(image_cropped[1], 1)
                 print(f"written {output_file_path}")
-
+            return output_file_path
 
     def write_hls_rasterio_stack(self):
         """

@@ -60,6 +60,8 @@ if __name__ == '__main__':
     #hls_data.resample_radd_alerts(merged_radd_alerts)
 
 
+
+
     #################
     ## Step 2: Write Sen2 images to Stack
     #################
@@ -70,13 +72,13 @@ if __name__ == '__main__':
     ##########
     # Step 3: Crop radd alerts to Sen2 stacks.
     #########
-    # for sentinel2_file in os.listdir(stack_path_list):
-    #     if sentinel2_file.endswith('.tif'):
-    #         sentinel2_file_path = os.path.join(stack_path_list, sentinel2_file)
+    for sentinel2_file in os.listdir(stack_path_list):
+        if sentinel2_file.endswith('.tif'):
+            sentinel2_file_path = os.path.join(stack_path_list, sentinel2_file)
     #
     #         # Call crop_images_to_stacks for each Sentinel-2 file
-    #         hls_data.crop_single_stack(sentinel2_file_path,
-    #                                    r"E:\Data\Radd_Alerts_Borneo\resampled_merged_radd_alerts_qgis_int16_compressed_30m.tif", cropped_radd_alert_path)
+            hls_data.crop_single_stack(sentinel2_file_path,
+                                       r"E:\Data\Radd_Alerts_Borneo\resampled_merged_radd_alerts_qgis_int16_compressed_30m.tif", cropped_radd_alert_path)
 
 
 
@@ -133,11 +135,11 @@ if __name__ == '__main__':
     #             print(f"removed redundant reordered file {reordered_file}")
     #         else:
     #             print(f"already exists: {output_file}")
-    #
+
 
 
     ##########
-    ## Step 7: Mask Sen2_agb_radd stacks by Hansen Forest Loss. Remove distrubances detected prior to RADD start date (2021)
+    ## Step 7: Mask Sen2_agb_radd stacks by Hansen Forest Loss. Remove disturbances detected prior to RADD start date (2021)
     ##########
 
     # hls_data.forest_loss_mask(sen2_agb_radd_stack_path,hansen_folder,forest_stacks_folder)

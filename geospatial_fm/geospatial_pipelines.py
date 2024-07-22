@@ -99,21 +99,21 @@ class TorchRandomCrop(object):
 
 @PIPELINES.register_module()
 class TorchNormalize(object):
-    """Normalize the image.
-
-    It normalises a multichannel image using torch
+    """Normalize the image while ignoring nodata values.
 
     Args:
-        mean (sequence): Mean values .
-        std (sequence): Std values of 3 channels.
+        means (sequence): Mean values for each channel.
+        stds (sequence): Standard deviation values for each channel.
+        nodata (float): The nodata value to be ignored during normalization.
     """
 
-    def __init__(self, means, stds):
+    def __init__(self, means, stds, nodata=-1):
         self.means = means
         self.stds = stds
+        self.nodata = nodata
 
     def __call__(self, results):
-        """Call function to normalize images.
+        """Call function to normalize images, ignoring nodata values.
 
         Args:
             results (dict): Result dict from loading pipeline.
@@ -122,8 +122,118 @@ class TorchNormalize(object):
             dict: Normalized results, 'img_norm_cfg' key is added into
                 result dict.
         """
-        results["img"] = F.normalize(results["img"], self.means, self.stds, False)
-        results["img_norm_cfg"] = dict(mean=self.means, std=self.stds)
+        img = results["img"]
+        mask = img != self.nodata  # Create a mask for nodata values
+
+        for i, (mean, std) in enumerate(zip(self.means, self.stds)):
+            # Normalize only non-nodata values
+            img_channel = img[i]
+            img_channel_masked = torch.masked_select(img_channel, mask[i])
+            normalized_channel = (img_channel_masked - mean) / std
+            img_channel[mask[i]] = normalized_channel  # Apply normalized values back to the original image
+
+            # Handle nodata values separately if needed
+            img_channel[~mask[i]] = self.nodata  # Optionally set nodata values explicitly, though they should remain unchanged
+
+            img[i] = img_channel  # Update the channel in the original image tensor
+
+        results["img"] = img
+        results["img_norm_cfg"] = dict(mean=self.means, std=self.stds, nodata=self.nodata)
+        return results
+
+# @PIPELINES.register_module()
+# class TorchNormalize(object):
+#     """Normalize the image.
+#
+#     It normalises a multichannel image using torch
+#
+#     Args:
+#         mean (sequence): Mean values .
+#         std (sequence): Std values of 3 channels.
+#     """
+#
+#     def __init__(self, means, stds):
+#         self.means = means
+#         self.stds = stds
+#
+#     def __call__(self, results):
+#         """Call function to normalize images.
+#
+#         Args:
+#             results (dict): Result dict from loading pipeline.
+#
+#         Returns:
+#             dict: Normalized results, 'img_norm_cfg' key is added into
+#                 result dict.
+#         """
+#         results["img"] = F.normalize(results["img"], self.means, self.stds, False)
+#         results["img_norm_cfg"] = dict(mean=self.means, std=self.stds)
+#         return results
+
+
+@PIPELINES.register_module()
+class Reshape_unet(object):
+    """
+    It reshapes a tensor.
+    Args:
+        new_shape (tuple): tuple with new shape
+        keys (list): list with keys to apply reshape to
+        look_up (dict): dictionary to use to look up dimensions when more than one is to be inferred from the original image, which have to be inputed as -1s in the new_shape argument. eg {'2': 1, '3': 2} would infer the new 3rd and 4th dimensions from the 2nd and 3rd from the original image.
+    """
+
+        ## UNET VERSION
+    def __init__(self, new_shape, keys, look_up=None):
+        self.new_shape = new_shape
+        self.keys = keys
+        self.look_up = look_up if look_up is not None else {}
+
+    def __call__(self, results):
+        for key in self.keys:
+            old_shape = results[key].shape
+            new_shape = list(self.new_shape)
+
+            for i, dim_size in enumerate(new_shape):
+                if dim_size == -1:
+                    # Ensure the lookup key is in string format and exists in the dictionary
+                    if str(i) in self.look_up:
+                        # Adjust for 0-based indexing
+                        lookup_key = self.look_up[str(i)] - 1
+                        new_shape[i] = old_shape[lookup_key]
+                    else:
+                        raise KeyError(f"Key {i} not found in look_up dictionary")
+
+            results[key] = results[key].reshape(tuple(new_shape))
+
+        return results
+
+@PIPELINES.register_module()
+class Reshape_prithvi(object):
+    """
+    It reshapes a tensor.
+    Args:
+        new_shape (tuple): tuple with new shape
+        keys (list): list with keys to apply reshape to
+        look_up (dict): dictionary to use to look up dimensions when more than one is to be inferred from the original image, which have to be inputed as -1s in the new_shape argument. eg {'2': 1, '3': 2} would infer the new 3rd and 4th dimensions from the 2nd and 3rd from the original image.
+    """
+
+        ##PRITHVI VERSION
+    def __init__(self, new_shape, keys, look_up=None):
+        self.new_shape = new_shape
+        self.keys = keys
+        self.look_up = look_up
+
+    def __call__(self, results):
+        dim_to_infer = np.where(np.array(self.new_shape) == -1)[0]
+
+        for key in self.keys:
+            if (len(dim_to_infer) > 1) & (self.look_up is not None):
+                old_shape = results[key].shape
+                tmp = np.array(self.new_shape)
+                for i in range(len(dim_to_infer)):
+                    tmp[dim_to_infer[i]] = old_shape[self.look_up[str(dim_to_infer[i])]]
+                self.new_shape = tuple(tmp)
+            results[key] = results[key].reshape(self.new_shape)
+
         return results
 
 
@@ -137,6 +247,7 @@ class Reshape(object):
         look_up (dict): dictionary to use to look up dimensions when more than one is to be inferred from the original image, which have to be inputed as -1s in the new_shape argument. eg {'2': 1, '3': 2} would infer the new 3rd and 4th dimensions from the 2nd and 3rd from the original image.
     """
 
+        ##PRITHVI VERSION
     def __init__(self, new_shape, keys, look_up=None):
         self.new_shape = new_shape
         self.keys = keys
