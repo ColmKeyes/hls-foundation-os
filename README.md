@@ -39,7 +39,7 @@
   - `forest_disturbances_config.py`: Config for forest disturbances model
   - `multi_temporal_crop_classification.py`: Config for multi-temporal crop classification
   - `sen1floods11_config.py`: Config for Sentinel-1 floods model
-- **geospatial_fm/**: Geospatial Foundation Model
+- **geospatial_fm**: Geospatial Foundation Model
   - `datasets.py`: Datasets utilities and functions
   - `geospatial_fm.py`: Geospatial feature management core functions
   - `geospatial_pipelines.py`: Pipelines for geospatial processing
