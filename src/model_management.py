@@ -42,21 +42,6 @@ def compare_checkpoints(original_checkpoint_path, updated_checkpoint_path):
                 # Display a subset of the tensor values for comparison
                 print(f"Original value sample: {original_value.flatten()[:10]}")
                 print(f"Updated value sample: {updated_value.flatten()[:10]}")
-#
-# def compare_checkpoints(original_checkpoint_path, updated_checkpoint_path):
-#     """Compare the weights of two checkpoints."""
-#     original_checkpoint = torch.load(original_checkpoint_path, map_location='cpu')
-#     updated_checkpoint = torch.load(updated_checkpoint_path, map_location='cpu')
-#
-#     for key in original_checkpoint['state_dict']:
-#         if key in updated_checkpoint['state_dict']:
-#             original_value = original_checkpoint['state_dict'][key]
-#             updated_value = updated_checkpoint['state_dict'][key]
-#             # Ensure we compare tensors of the same shape
-#             if original_value.shape != updated_value.shape:
-#                 print(f"Shape mismatch for: {key}")
-#             elif not torch.equal(original_value, updated_value):
-#                 print(f"Value changed for: {key}")
 
 # Load the checkpoint
 checkpoint_path = r'E:\burn_scars_Prithvi_100M.pth'

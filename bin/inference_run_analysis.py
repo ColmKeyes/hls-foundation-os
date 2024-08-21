@@ -1,39 +1,3 @@
-# import matplotlib.pyplot as plt
-# import os
-# from src.model_analysis import plot_image_triplet
-#
-# model_config_pairs = [
-#     ("Prithvi-100m_backscatter/best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth", "forest_disturbances_config_backscatter.py"),
-#     ("Prithvi-100m_coherence/best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth", "forest_disturbances_config_coherence.py"),
-#     ("Prithvi-100m_burnscars/best_mIoU_iter_1000_minalerts_15000_prithvi_burnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
-#     ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth","forest_disturbances_config.py"),
-#
-# ]
-#
-# image_basenames = [
-#     "2023290_T50MKE_agb_radd_fmask_stack_1024_3072",
-#     "2023276_T49MDU_agb_radd_fmask_stack_2048_1024",
-#     "2023271_T49MDU_agb_radd_fmask_stack_2048_1024",
-#     "2023245_T50MKE_agb_radd_fmask_stack_2048_512",
-#     "2023241_T49MDU_agb_radd_fmask_stack_2048_1024",
-#     "2023111_T49MET_agb_radd_fmask_stack_512_512",
-#     "2023076_T49MET_agb_radd_fmask_stack_512_512"
-# ]
-#
-# # Directory where you want to save the combined images
-# save_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results\comparisons"
-# os.makedirs(save_path, exist_ok=True)
-#
-#
-# for image_basename in image_basenames:
-#     plot_image_triplet(
-#     input_path=r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\10000_minalerts\test",
-#     output_path=r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results\best_mIoU_iter_1000_minalerts_15000_prithvi",
-#     ground_truth_path=r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\10000_minalerts\test",
-#     image_basename=image_basename,
-#     save_path=save_path
-#
-#     )
 
 
 import os

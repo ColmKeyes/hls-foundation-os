@@ -45,39 +45,3 @@ for metric in metrics:
 
 
 
-
-
-
-
-
-
-
-# # run_model_analysis.py
-#
-# import matplotlib.pyplot as plt
-# from src.model_analysis import ModelAnalysis
-#
-# # Paths to your log files
-# log_files = {
-#     # "Prithvi_no_finetune": "path/to/prithvi_no_finetune.log.json",
-#     "Prithvi_finetune": "E:\PycharmProjects\hls-foundation-os\Prithvi-100m/best_mIoU_iter_1000_minalerts_10000_prithvi.log.json",
-#     "UNet": "E:\PycharmProjects\hls-foundation-os\Prithvi-100m/best_mIoU_iter_1000_minalerts_10000_unet.log.json",
-#
-# }
-#
-# # Initialize ModelAnalysis objects
-# analyses = {name: ModelAnalysis(log_file) for name, log_file in log_files.items()}
-#
-# # Plot metrics
-#
-# metrics = ["aAcc", "mIoU", "mAcc", "IoU.Forest", "IoU.Disturbed_Forest", "Acc.Forest", "Acc.Disturbed_Forest"]
-# for metric in metrics:
-#     fig, ax = plt.subplots()
-#     for name, analysis in analyses.items():
-#         analysis.plot_metric(metric, ax, label=name)
-#
-#     ax.set_ylim([0, 1])
-#     plt.title(metric)
-#     plt.savefig(f'E:\Data\Results\Prithvi_model_analysis_images/{metric}_comparison.png')
-#     plt.close()
-#

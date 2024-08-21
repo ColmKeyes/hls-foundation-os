@@ -531,64 +531,6 @@ class Loader:
             os.remove(file_path)
             print(f"Normalized file saved as: {output_path}")
 
-
-    # def find_global_min_max(self, folder_path, nodata_value=-9999):
-    #     """
-    #     Finds the global minimum and maximum values across the first 6 bands of all Sentinel-2 data files in a folder,
-    #     excluding no-data and values below zero.
-    #     """
-    #     global_min = np.inf
-    #     global_max = -np.inf
-    #
-    #     for file_name in os.listdir(folder_path):
-    #         if file_name.endswith('_sentinel_normalized.tif'):
-    #             file_path = os.path.join(folder_path, file_name)
-    #             with rasterio.open(file_path) as src:
-    #                 for i in range(1, 7):  # Only consider the first 6 bands
-    #                     band = src.read(i).astype(np.float32)
-    #                     valid_mask = (band != nodata_value) & (band >= 0)
-    #                     valid_data = band[valid_mask]
-    #
-    #                     if valid_data.size > 0:  # Check if there's any valid data
-    #                         band_min = valid_data.min()
-    #                         band_max = valid_data.max()
-    #
-    #                         if band_min < global_min:
-    #                             global_min = band_min
-    #                         if band_max > global_max:
-    #                             global_max = band_max
-    #     print(f"Global Max: {global_max}, Global Min: {global_min}")
-    #     return global_min, global_max
-    #
-    # def normalize_dataset(self, folder_path, nodata_value=-9999):
-    #     """
-    #     Normalizes all Sentinel-2 data files in a folder using global min and max values.
-    #     """
-    #     global_min, global_max = self.find_global_min_max(folder_path, nodata_value)
-    #
-    #     for file_name in os.listdir(folder_path):
-    #         if file_name.endswith('_sentinel_normalized.tif'):
-    #             file_path = os.path.join(folder_path, file_name)
-    #             output_path = os.path.splitext(file_path)[0] + '_DS_normalized.tif'
-    #
-    #             with rasterio.open(file_path) as src:
-    #                 meta = src.meta
-    #                 meta.update(dtype=rasterio.float32)
-    #
-    #                 with rasterio.open(output_path, 'w', **meta) as dst:
-    #                     for i in range(1, src.count + 1):
-    #                         band = src.read(i).astype(np.float32)
-    #
-    #                         if i <= 6:  # Normalize the first 6 bands
-    #                             valid_mask = (band != nodata_value) & (band >= 0)
-    #                             normalized_band = np.where(valid_mask, (band - global_min) / (global_max - global_min), nodata_value)
-    #                             dst.write_band(i, normalized_band)
-    #
-    #                         else:  # Directly add the 7th band without normalization
-    #                             dst.write_band(i, band)
-    #             #os.remove(file_path)
-    #             print(f"Normalized file saved as: {output_path}")
-
     def plot_metrics_from_log(self, log_filename):
         # Regular expression patterns
         performance_pattern = re.compile(

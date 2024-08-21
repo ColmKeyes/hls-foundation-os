@@ -1,3 +1,1541 @@
+#####################################################################################
+### Final Clearout
+###
+#####################################################################################
+
+
+
+
+#################
+## 2 sar model run input processor
+#################
+
+
+
+# import os
+# from src.sar_model_input_processor import SARLoader
+#
+# sen2_stack_dir = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\15000_minalerts"
+# output_dir = r"E:\Data\Sentinel2_data\30pc_cc\Borneo_June2021_Dec_2023_30pc_cc_stacks_agb_radd_sar"
+#
+# sar_model_processing = SARLoader(sen2_stack_dir, output_dir)
+#
+# # Set this to "coh" or "bsc" based on which data you want to process
+# data_type = "bsc"
+#
+# # Calculate Global Statistics for SAR Bands
+# global_min, global_max, global_mean, global_std = sar_model_processing.calculate_global_statistics(output_dir, bands=[6, 7], data_type=data_type)
+#
+# # Normalize SAR bands in each stack using global statistics and reapply masks
+# for file in os.listdir(output_dir):
+#     if file.endswith(f'_sentinel_agb_normalized_sar_masked.tif') and data_type in file:
+#         combined_stack_path = os.path.join(output_dir, file)
+#
+#         # Normalize SAR bands using the global statistics
+#         sar_model_processing.normalize_sar_bands(combined_stack_path, global_mean, global_std, bands=[6, 7])
+#
+#         # Reapply masks after normalization
+#         sar_model_processing.apply_mask_and_save_to_sar_bands(combined_stack_path)
+#
+#         print(f"Processed {combined_stack_path} for data type: {data_type}")
+
+
+
+
+
+#
+# import os
+#
+# from src.sar_model_input_processor import SARLoader
+# sen2_stack_dir = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\15000_minalerts"  # r"E:\Data\Sentinel2_data\30pc_cc\Borneo_June2021_Dec_2023_30pc_cc_stacks_agb_radd"
+# # Define the output directory for processed files
+# output_dir = r"E:\Data\Sentinel2_data\30pc_cc\Borneo_June2021_Dec_2023_30pc_cc_stacks_agb_radd_sar"
+#
+#
+#
+# sar_model_processing = SARLoader(sen2_stack_dir, output_dir)
+#
+# # Step 1: Calculate Global Statistics for SAR Bands
+# global_min, global_max, global_mean, global_std = sar_model_processing.calculate_global_statistics(output_dir, bands=[6, 7])
+#
+# # Step 2: Normalize SAR bands in each stack using global statistics and reapply masks
+# for file in os.listdir(output_dir):
+#     if file.endswith('_sentinel_agb_normalized_sar.tif'):
+#         combined_stack_path = os.path.join(output_dir, file)
+#
+#         # Normalize SAR bands using the global statistics
+#         sar_model_processing.normalize_sar_bands(combined_stack_path, global_mean, global_std, bands=[6, 7])
+#
+#         # Optionally, reapply masks after normalization if necessary
+#         sar_model_processing.apply_mask_and_save_to_sar_bands(combined_stack_path)
+#
+
+
+#
+# for file in os.listdir(output_dir):
+#     if file.endswith('_sentinel_agb_normalized_sar.tif'):
+#         ############
+#         # Step 4: re-mask SAR stacks
+#         ############
+#         combined_stack_path = os.path.join(output_dir, file)
+#         sar_model_processing.apply_mask_and_save_to_sar_bands(combined_stack_path)
+#
+#         ############
+#         # Step 5: Normalise SAR stacks & calculate statistics
+#         ############
+#
+
+
+
+
+#################
+## test_analysis
+#################
+
+# class TestAnalysis:
+#     def __init__(self, log_file):
+#         self.log_file = log_file
+#         self.data = self.load_log_data()
+#
+#     def load_log_data(self):
+#         """Load the log data from the JSON file."""
+#         with open(self.log_file, 'r') as f:
+#             return json.load(f)
+#
+#     def get_metrics(self):
+#         """Get all metrics contained in the log file."""
+#         return self.data['metric']
+
+
+#
+# class TestAnalysis:
+#     def __init__(self, log_file):
+#         # Expecting log_files to be a list of log file paths for the runs of a single model
+#         self.log_file = log_file
+#         self.data = [self.load_log_data(log_file)]# for log_file in log_files]
+#
+#     def load_log_data(self, log_file):
+#         """Load the log data from the JSON file."""
+#         with open(log_file, 'r') as f:
+#             return json.load(f)
+#
+#     def get_average_metrics(self):
+#         """Calculate the average metrics across multiple runs."""
+#         metrics_list = [run_data['metric'] for run_data in self.data]
+#
+#         # Initialize a dictionary to store the average metrics
+#         average_metrics = {}
+#
+#         # Get the list of all metric names
+#         metric_names = metrics_list[0].keys()
+#
+#         # Calculate the average for each metric
+#         for name in metric_names:
+#             metric_values = [metrics[name] for metrics in metrics_list]
+#             average_metrics[name] = np.mean(metric_values)
+#
+#         return average_metrics
+
+
+#################
+## sar model input processor
+#################
+
+
+# def compute_global_min_max(self, input_folder, bands=[6, 7]):
+#     global_min = np.full(len(bands), np.inf)
+#     global_max = np.full(len(bands), -np.inf)
+#
+#     for filename in os.listdir(input_folder):
+#         if filename.endswith('_sentinel_agb_normalized_sar_masked.tif') and self.data_type in filename:
+#             filepath = os.path.join(input_folder, filename)
+#             with rasterio.open(filepath) as src:
+#                 for i, band_idx in enumerate(bands):
+#                     band = src.read(band_idx).astype(np.float32)
+#                     valid_mask = band > self.nodata_value
+#                     valid_pixels = band[valid_mask]
+#                     if valid_pixels.size > 0:
+#
+#                         index = i - 6  # Subtract 6 to align with the 0-indexed arrays global_min and global_max
+#                         global_min[index] = min(np.min(valid_pixels), global_min[index])
+#                         global_max[index] = max(np.max(valid_pixels), global_max[index])
+#                         # global_min[i - bands[0]] = min(np.min(valid_pixels), global_min[i - bands[0]])
+#                         # global_max[i - bands[0]] = max(np.max(valid_pixels), global_max[i - bands[0]])
+#
+#     return global_min, global_max
+
+
+
+
+#################
+## model management
+#################
+
+#
+# def compare_checkpoints(original_checkpoint_path, updated_checkpoint_path):
+#     """Compare the weights of two checkpoints."""
+#     original_checkpoint = torch.load(original_checkpoint_path, map_location='cpu')
+#     updated_checkpoint = torch.load(updated_checkpoint_path, map_location='cpu')
+#
+#     for key in original_checkpoint['state_dict']:
+#         if key in updated_checkpoint['state_dict']:
+#             original_value = original_checkpoint['state_dict'][key]
+#             updated_value = updated_checkpoint['state_dict'][key]
+#             # Ensure we compare tensors of the same shape
+#             if original_value.shape != updated_value.shape:
+#                 print(f"Shape mismatch for: {key}")
+#             elif not torch.equal(original_value, updated_value):
+#                 print(f"Value changed for: {key}")
+
+
+
+#################
+## model input processor
+#################
+# def find_global_min_max(self, folder_path, nodata_value=-9999):
+#     """
+#     Finds the global minimum and maximum values across the first 6 bands of all Sentinel-2 data files in a folder,
+#     excluding no-data and values below zero.
+#     """
+#     global_min = np.inf
+#     global_max = -np.inf
+#
+#     for file_name in os.listdir(folder_path):
+#         if file_name.endswith('_sentinel_normalized.tif'):
+#             file_path = os.path.join(folder_path, file_name)
+#             with rasterio.open(file_path) as src:
+#                 for i in range(1, 7):  # Only consider the first 6 bands
+#                     band = src.read(i).astype(np.float32)
+#                     valid_mask = (band != nodata_value) & (band >= 0)
+#                     valid_data = band[valid_mask]
+#
+#                     if valid_data.size > 0:  # Check if there's any valid data
+#                         band_min = valid_data.min()
+#                         band_max = valid_data.max()
+#
+#                         if band_min < global_min:
+#                             global_min = band_min
+#                         if band_max > global_max:
+#                             global_max = band_max
+#     print(f"Global Max: {global_max}, Global Min: {global_min}")
+#     return global_min, global_max
+#
+# def normalize_dataset(self, folder_path, nodata_value=-9999):
+#     """
+#     Normalizes all Sentinel-2 data files in a folder using global min and max values.
+#     """
+#     global_min, global_max = self.find_global_min_max(folder_path, nodata_value)
+#
+#     for file_name in os.listdir(folder_path):
+#         if file_name.endswith('_sentinel_normalized.tif'):
+#             file_path = os.path.join(folder_path, file_name)
+#             output_path = os.path.splitext(file_path)[0] + '_DS_normalized.tif'
+#
+#             with rasterio.open(file_path) as src:
+#                 meta = src.meta
+#                 meta.update(dtype=rasterio.float32)
+#
+#                 with rasterio.open(output_path, 'w', **meta) as dst:
+#                     for i in range(1, src.count + 1):
+#                         band = src.read(i).astype(np.float32)
+#
+#                         if i <= 6:  # Normalize the first 6 bands
+#                             valid_mask = (band != nodata_value) & (band >= 0)
+#                             normalized_band = np.where(valid_mask, (band - global_min) / (global_max - global_min), nodata_value)
+#                             dst.write_band(i, normalized_band)
+#
+#                         else:  # Directly add the 7th band without normalization
+#                             dst.write_band(i, band)
+#             #os.remove(file_path)
+#             print(f"Normalized file saved as: {output_path}")
+
+
+
+
+
+
+#################
+## model analysis
+#################
+
+# def add_legend(ax, cmap, labels):
+#     patches = [plt.Rectangle((0, 0), 1, 1, color=cmap(i)) for i in range(len(labels))]
+#     ax.legend(handles=patches, labels=labels, loc='lower right')
+
+# def plot_image_triplet(input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+#     suffix = ''
+#     if data_type == 'backscatter':
+#         suffix = '_bsc_masked_normalized'
+#     elif data_type == 'coherence':
+#         suffix = '_coh_masked_normalized'
+#
+#     run_number = ''
+#     for part in save_path.split('_'):
+#         if part.startswith('run'):
+#             run_number = part
+#             break
+#
+#
+#     input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+#     output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_{run_number}_op.tif")
+#     ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+#
+#     class_cmap = ListedColormap(['lightblue', 'orange', 'grey'])
+#     difference_cmap = ListedColormap(['orange', "lightblue", 'grey'])
+#
+#     inProj = Proj(init='epsg:32650')
+#     outProj = Proj(init='epsg:4326')
+#
+#     # Transform the corners of the image to lat/long
+#     left, bottom = transform(inProj, outProj, 230536.5095550618, -107359.60842863785)
+#     right, top = transform(inProj, outProj, 245873.9621862365, -92022.15579746317)
+#
+#     with rasterio.open(input_image) as src:
+#         if data_type == "backscatter" or data_type == "coherence":
+#             input_rgb = src.read([1, 2, 3])
+#
+#         input_rgb = src.read([1, 2, 3])
+#         input_rgb = np.clip(input_rgb / 0.1, 0, 1)
+#
+#     with rasterio.open(output_image) as src:
+#         output_data = src.read(1).astype(float)
+#         output_data[output_data == -1] = np.nan
+#
+#     with rasterio.open(ground_truth_image) as src:
+#         gt_data = src.read(1).astype(float)
+#         gt_data[gt_data == -9999] = np.nan
+#
+#     # Create the difference map, reversing the color for change and no change
+#     difference_map = np.where(np.isnan(output_data) | np.isnan(gt_data), 2, 1 - np.abs(gt_data - output_data))
+#
+#     fig, axs = plt.subplots(1, 4, figsize=(30, 8), sharex=True, sharey=True)
+#     axs[0].imshow(input_rgb.transpose(1, 2, 0), extent=[left, right, bottom, top])
+#     axs[0].set_title('Input RGB')
+#     axs[0].set_xlabel('Longitude')
+#     axs[0].set_ylabel('Latitude')
+#
+#     show_class_data(output_data, axs[1], class_cmap, 'Output', [left, right, bottom, top])
+#     show_class_data(gt_data, axs[2], class_cmap, 'Ground Truth', [left, right, bottom, top])
+#
+#     # Updated to reverse the colors for the difference map
+#     axs[3].imshow(difference_map, cmap=difference_cmap, vmin=0, vmax=2, extent=[left, right, bottom, top])
+#     axs[3].set_title('Difference Map')
+#     axs[3].set_xlabel('Longitude')
+#     axs[3].set_ylabel('Latitude')
+#
+#     add_legend(axs[2], class_cmap, ['Non-Disturbed', 'Disturbed', 'No Data'])
+#     add_legend(axs[3], difference_cmap, ['Difference', 'No Difference', 'No Data'])
+#
+#     output_filename = os.path.join(save_path, f"{image_basename}_comparison.png")
+#     plt.tight_layout()
+#     plt.savefig(output_filename, bbox_inches='tight')
+#     plt.close()
+#
+#     print(f"File saved at {output_filename}")
+
+
+
+# def plot_image_triplet(input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+#     suffix = ''
+#     if data_type == 'backscatter':
+#         suffix = '_bsc_masked_normalized'
+#     elif data_type == 'coherence':
+#         suffix = '_coh_masked_normalized'
+#
+#     input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+#     output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_final_run1.tif")
+#     ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+#
+#     class_cmap = ListedColormap(['lightblue', 'orange', 'grey'])
+#     difference_cmap = ListedColormap(['orange', "lightblue", 'grey'])
+#
+#     with rasterio.open(input_image) as src:
+#         input_rgb = src.read([1, 2, 3])
+#         input_rgb = np.clip(input_rgb / 0.1, 0, 1)
+#
+#     with rasterio.open(output_image) as src:
+#         output_data = src.read(1).astype(float)
+#         output_data[output_data == -1] = np.nan
+#
+#     with rasterio.open(ground_truth_image) as src:
+#         gt_data = src.read(1).astype(float)
+#         gt_data[gt_data == -9999] = np.nan
+#
+#     # Create the difference map, reversing the color for change and no change
+#     difference_map = np.where(np.isnan(output_data) | np.isnan(gt_data), 2, 1 - np.abs(gt_data - output_data))
+#
+#     fig, axs = plt.subplots(1, 4, figsize=(30, 8), sharex=True, sharey=True)
+#     axs[0].imshow(input_rgb.transpose(1, 2, 0))
+#     axs[0].set_title('Input RGB')
+#     axs[0].axis('on')
+#
+#     show_class_data(output_data, axs[1], class_cmap, 'Output')
+#     show_class_data(gt_data, axs[2], class_cmap, 'Ground Truth')
+#
+#     # Updated to reverse the colors for the difference map
+#     axs[3].imshow(difference_map, cmap=difference_cmap, vmin=0, vmax=2)
+#     axs[3].set_title('Difference Map')
+#     axs[3].axis('on')
+#
+#     add_legend(axs[2], class_cmap, ['Non-Disturbed', 'Disturbed', 'No Data'])
+#     add_legend(axs[3], difference_cmap, ['Difference', 'No Difference', 'No Data'])
+#
+#     output_filename = os.path.join(save_path, f"{image_basename}_comparison.png")
+#     plt.tight_layout()
+#     plt.savefig(output_filename, bbox_inches='tight')
+#     plt.close()
+#
+#     print(f"File saved at {output_filename}")
+#
+# def show_class_data(data, ax, cmap, title):
+#     mapped_data = np.full(data.shape, 2)  # Default to no data
+#     mapped_data[data == 0] = 0  # Non-disturbed
+#     mapped_data[data == 1] = 1  # Disturbed
+#     ax.imshow(mapped_data, cmap=cmap)
+#     ax.set_title(title)
+#     ax.axis('on')
+#
+# def add_legend(ax, cmap, labels):
+#     patches = [plt.Rectangle((0, 0), 1, 1, color=cmap(i)) for i in range(len(labels))]
+#     ax.legend(handles=patches, labels=labels, loc='lower right')
+#
+
+
+
+
+
+
+
+
+#
+# def plot_image_triplet(input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+#     if data_type == 'backscatter':
+#         suffix = '_bsc_masked_normalized'
+#     elif data_type == 'coherence':
+#         suffix = '_coh_masked_normalized'
+#     else:
+#         suffix = ''
+#
+#     input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+#     output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_final_run1.tif")
+#     ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+#
+#     with rasterio.open(input_image) as src:
+#         input_rgb = src.read([1, 2, 3])
+#         input_rgb = np.clip(input_rgb / 0.1, 0, 1)  # Normalize for display
+#
+#     with rasterio.open(output_image) as src:
+#         output_data = src.read(1).astype(float)
+#         output_data[output_data == -1] = np.nan  # Set no-data values to NaN
+#
+#     with rasterio.open(ground_truth_image) as src:
+#         gt_data = src.read(1).astype(float)
+#         gt_data[gt_data == -9999] = np.nan  # Set no-data values to NaN
+#
+#     # Define custom colors
+#     no_difference_color = 'lightblue'  # Light blue for no change
+#     difference_color = 'orange'  # Orange for change
+#     nodata_color = 'grey'  # Grey for no data
+#
+#     difference_map = np.where(np.isnan(output_data) | np.isnan(gt_data), 2, np.abs(gt_data - output_data))
+#
+#     # Custom colormap for the difference map
+#     difference_cmap = ListedColormap([no_difference_color, difference_color, nodata_color])
+#
+#     fig, axs = plt.subplots(1, 4, figsize=(24, 6), sharex=True, sharey=True)
+#     axs[0].imshow(input_rgb.transpose(1, 2, 0))
+#     axs[0].set_title('Input RGB')
+#     axs[1].imshow(output_data, cmap='gray', vmin=0, vmax=1)
+#     axs[1].set_title('Output')
+#     axs[2].imshow(gt_data, cmap='gray', vmin=0, vmax=1)
+#     axs[2].set_title('Ground Truth')
+#     axs[3].imshow(difference_map, cmap=difference_cmap, vmin=0, vmax=2)
+#     axs[3].set_title('Difference Map')
+#
+#     # Add north arrow to the first plot
+#     x, y, arrow_length = 0.1, 0.9, 0.1
+#     axs[0].annotate('N', xy=(x, y - arrow_length), xytext=(x, y),
+#                     arrowprops=dict(facecolor='black', width=5, headwidth=15),
+#                     ha='center', va='center', fontsize=20, xycoords=axs[0].transAxes)
+#
+#     # Legend for the difference map
+#     labels = ['No Difference', 'Difference', 'No Data']
+#     patches = [plt.Line2D([0], [0], marker='o', color='w', label=labels[i],
+#                           markerfacecolor=difference_cmap.colors[i], markersize=15) for i in range(len(labels))]
+#     axs[3].legend(handles=patches, bbox_to_anchor=(1.05, 1), loc='upper left')
+#
+#     plt.tight_layout()
+#     output_filename = os.path.join(save_path, f"{image_basename}_comparison.png")
+#     plt.savefig(output_filename, bbox_inches='tight')
+#     plt.close()
+#
+#     print(f"File saved at {output_filename}")
+
+
+
+
+
+#
+# def plot_image_triplet(input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+#     suffix = ''
+#     if data_type == 'backscatter':
+#         suffix = '_bsc_masked_normalized'
+#     elif data_type == 'coherence':
+#         suffix = '_coh_masked_normalized'
+#
+#     input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+#     output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_final_run1.tif")
+#     ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+#
+#     class_cmap = ListedColormap(['lightblue', 'orange', 'grey'])
+#     difference_cmap = ListedColormap(['lightblue', 'orange', 'grey'])
+#
+#     with rasterio.open(input_image) as src:
+#         input_rgb = src.read([1, 2, 3])
+#         input_rgb = np.clip(input_rgb / 0.1, 0, 1)
+#
+#     with rasterio.open(output_image) as src:
+#         output_data = src.read(1).astype(float)
+#         output_data[output_data == -1] = np.nan
+#
+#     with rasterio.open(ground_truth_image) as src:
+#         gt_data = src.read(1).astype(float)
+#         gt_data[gt_data == -9999] = np.nan
+#
+#     difference_map = np.where(np.isnan(output_data) | np.isnan(gt_data), 2, np.abs(gt_data - output_data))
+#
+#     fig, axs = plt.subplots(1, 4, figsize=(24, 6), sharex=True, sharey=True)
+#     axs[0].imshow(input_rgb.transpose(1, 2, 0))
+#     axs[0].set_title('Input RGB')
+#     axs[0].axis('on')
+#
+#     show_class_data(output_data, axs[1], class_cmap, 'Output')
+#     show_class_data(gt_data, axs[2], class_cmap, 'Ground Truth')
+#
+#     axs[3].imshow(difference_map, cmap=difference_cmap)
+#     axs[3].set_title('Difference Map')
+#     axs[3].axis('on')
+#
+#     add_legend(axs[2], class_cmap, ['Non-Disturbed', 'Disturbed', 'No Data'])
+#     add_legend(axs[3], difference_cmap, ['No Change', 'Change', 'No Data'])
+#
+#     output_filename = os.path.join(save_path, f"{image_basename}_comparison.png")
+#     plt.tight_layout()
+#     plt.savefig(output_filename, bbox_inches='tight')
+#     plt.close()
+#
+#     print(f"File saved at {output_filename}")
+#
+# def show_class_data(data, ax, cmap, title):
+#     mapped_data = np.full(data.shape, 2)
+#     mapped_data[data == 0] = 0
+#     mapped_data[data == 1] = 1
+#     ax.imshow(mapped_data, cmap=cmap)
+#     ax.set_title(title)
+#     ax.axis('on')
+#
+# def add_legend(ax, cmap, labels):
+#     patches = [plt.Rectangle((0, 0), 1, 1, color=cmap(i)) for i in range(len(labels))]
+#     ax.legend(handles=patches, labels=labels, loc='lower right')
+#
+#
+# def plot_image_triplet(input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+#     # Adjust the suffix based on the data type
+#     suffix = ''
+#     if data_type == 'backscatter':
+#         suffix = '_bsc_masked_normalized'
+#     elif data_type == 'coherence':
+#         suffix = '_coh_masked_normalized'
+#
+#     input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+#     output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_final_run1.tif")
+#     ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+#
+#     # Create a colormap for the output and ground truth data
+#     nodata_color = np.array([0.5, 0.5, 0.5])  # Grey color for no data
+#     cmap = ListedColormap(['black', 'white', nodata_color])
+#
+#     with rasterio.open(input_image) as src:
+#         input_rgb = src.read([1, 2, 3])
+#         input_rgb = np.clip(input_rgb / 0.1, 0, 1)
+#         # Set no-data values to grey in the input RGB image
+#         nodata_mask = np.all(input_rgb == 0, axis=0)
+#         input_rgb[:, nodata_mask] = nodata_color[:, None]
+#
+#         # Add geographic coordinates
+#         extent = rasterio.plot.plotting_extent(src)
+#
+#     with rasterio.open(output_image) as src:
+#         # Ensure the data read is float, to accommodate NaN values
+#         output_data = src.read(1).astype(float)  # Convert to float
+#         output_data[output_data == -1] = np.nan  # Set no-data values to NaN
+#
+#
+#     with rasterio.open(ground_truth_image) as src:
+#         gt_data = src.read(1)
+#         gt_data[gt_data == -9999] = np.nan  # Handle no-data values
+#
+#     # Calculate the difference map
+#     difference_map = output_data - gt_data
+#
+#     fig, axs = plt.subplots(1, 4, figsize=(24, 6))
+#     show(input_rgb, ax=axs[0], extent=extent, title='Input RGB')
+#     show(output_data, ax=axs[1], cmap=cmap, extent=extent, title='Output')
+#     show(gt_data, ax=axs[2], cmap=cmap, extent=extent, title='Ground Truth')
+#     im = axs[3].imshow(difference_map, cmap='coolwarm', vmin=-1, vmax=1, extent=extent)
+#     axs[3].set_title('Difference Map')
+#
+#     # Add north arrow to the first plot
+#     x, y, arrow_length = 0.1, 0.9, 0.1
+#     axs[0].annotate('N', xy=(x, y-arrow_length), xytext=(x, y),
+#                     arrowprops=dict(facecolor='black', width=5, headwidth=15),
+#                     ha='center', va='center', fontsize=20, xycoords=axs[0].transAxes)
+#
+#     # Add legend
+#     labels = ['Non-Disturbed', 'Disturbed', 'No Data']
+#     colors = [cmap.colors[i] for i in range(3)]
+#     patches = [plt.Line2D([0], [0], marker='o', color='w', label=labels[i],
+#                            markerfacecolor=colors[i], markersize=15) for i in range(len(labels))]
+#     axs[3].legend(handles=patches, bbox_to_anchor=(1.05, 1), loc='upper left')
+#
+#     # Add colorbar for the difference map
+#     cbar = fig.colorbar(im, ax=axs[3])
+#     cbar.set_label('Difference')
+#
+#     # Save the output
+#     output_filename = os.path.join(save_path, f"{image_basename}_comparison.png")
+#     plt.tight_layout()
+#     plt.savefig(output_filename, bbox_inches='tight')
+#     plt.close()
+#
+#     print(f"File saved at {output_filename}")
+
+#
+#
+# def plot_image_triplet( input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+#         if data_type == 'backscatter':
+#             suffix = '_bsc_masked_normalized'
+#         elif data_type == 'coherence':
+#             suffix = '_coh_masked_normalized'
+#         else:
+#             suffix = ''
+#
+#         input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+#         output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_final_run1.tif")
+#         ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+#
+#         # Create a colormap for the output and ground truth data
+#         cmap = ListedColormap(['grey', 'black', 'white'])
+#
+#         with rasterio.open(input_image) as src:
+#             input_rgb = src.read([1, 2, 3])
+#             input_rgb = np.clip(input_rgb / 0.1, 0, 1)
+#             # Set no-data values to grey in the input RGB image
+#             nodata_mask = np.all(input_rgb == 0, axis=0)
+#             for i in range(3):  # Set no-data regions to grey
+#                 input_rgb[i][nodata_mask] = 0.5
+#
+#             # Add geographic coordinates
+#             extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+#
+#         with rasterio.open(output_image) as src:
+#             output_data = src.read(1).astype(float)  # Convert to float
+#             output_data[output_data == -9999] = np.nan  # Assign NaN to no-data values
+#
+#         with rasterio.open(ground_truth_image) as src:
+#             gt_data = src.read(1).astype(float)  # Convert to float
+#             gt_data[gt_data == -9999] = np.nan  # Assign NaN to no-data values
+#
+#         difference_map = np.where(np.isnan(gt_data), np.nan, output_data - gt_data)
+#
+#         fig, axs = plt.subplots(1, 4, figsize=(24, 6))
+#         axs[0].imshow(input_rgb.transpose(1, 2, 0), extent=extent)
+#         axs[0].set_title('Input RGB')
+#         axs[0].axis('on')  # Keep axis to show the geographic coordinates
+#
+#         axs[1].imshow(output_data, cmap=cmap, vmin=0, vmax=1, extent=extent)
+#         axs[1].set_title('Output')
+#         axs[1].axis('on')
+#
+#         axs[2].imshow(gt_data, cmap=cmap, vmin=0, vmax=1, extent=extent)
+#         axs[2].set_title('Ground Truth')
+#         axs[2].axis('on')
+#
+#         im = axs[3].imshow(difference_map, cmap='coolwarm', vmin=-1, vmax=1, extent=extent)
+#         axs[3].set_title('Difference Map')
+#         axs[3].axis('on')
+#
+#         # Add north arrow
+#         x, y, arrow_length = 0.95, 0.95, 0.1
+#         axs[0].annotate('', xy=(x, y), xytext=(x, y - arrow_length),
+#                         arrowprops=dict(facecolor='black', width=5, headwidth=15),
+#                         ha='center', va='center', fontsize=20, xycoords=axs[0].transAxes)
+#
+#         # Add colorbar for the difference map
+#         fig.colorbar(im, ax=axs[3])
+#
+#         # Save the output
+#         output_filename = os.path.join(save_path, f"{image_basename}_comparison.png")
+#         plt.tight_layout()
+#         plt.savefig(output_filename, bbox_inches='tight')
+#         plt.close()
+#
+#         print(f"File saved at {output_filename}")
+
+        #
+        # def plot_image_triplet(input_path, output_path, ground_truth_path, image_basename, data_type, save_path):
+        #     # Adjust the suffix based on the data type
+        #     if data_type == 'backscatter':
+        #         suffix = '_bsc_masked_normalized'
+        #     elif data_type == 'coherence':
+        #         suffix = '_coh_masked_normalized'
+        #     else:
+        #         suffix = ''
+        #
+        #     input_image = os.path.join(input_path, f"{image_basename}_sentinel_agb_normalized{suffix}.tif")
+        #     output_image = os.path.join(output_path, f"{image_basename}_sentinel_agb_normalized{suffix}_pred_final_run1.tif")
+        #     ground_truth_image = os.path.join(ground_truth_path, f"{image_basename}_radd_labelled_agb.tif")
+        #
+        #     # Read the images and prepare the data
+        #     with rasterio.open(input_image) as src:
+        #         input_rgb = src.read([1, 2, 3])  # Assuming RGB are the first three bands
+        #         input_rgb = np.clip(input_rgb / 0.1, 0, 1)  # Normalize values for display
+        #
+        #     with rasterio.open(output_image) as src:
+        #         output_data = src.read(1)
+        #
+        #     with rasterio.open(ground_truth_image) as src:
+        #         gt_data = src.read(1)
+        #         gt_data = np.where(gt_data == -9999, np.nan, gt_data)  # Handle no-data values
+        #
+        #     difference_map = np.where(np.isnan(gt_data), np.nan, output_data - gt_data)
+        #
+        #     # Plotting the data
+        #     fig, axs = plt.subplots(1, 4, figsize=(20, 5))
+        #     axs[0].imshow(input_rgb.transpose(1, 2, 0))
+        #     axs[0].set_title('Input RGB')
+        #     axs[0].axis('off')
+        #
+        #     axs[1].imshow(output_data, cmap='gray', vmin=0, vmax=1)
+        #     axs[1].set_title('Output')
+        #     axs[1].axis('off')
+        #
+        #     axs[2].imshow(gt_data, cmap='gray', vmin=0, vmax=1)
+        #     axs[2].set_title('Ground Truth')
+        #     axs[2].axis('off')
+        #
+        #     axs[3].imshow(difference_map, cmap='coolwarm', vmin=-1, vmax=1)
+        #     axs[3].set_title('Difference Map')
+        #     axs[3].axis('off')
+        #
+        #     os.makedirs(save_path, exist_ok=True)
+        #     output = os.path.join(save_path, f"{image_basename}_comparison.png")
+        #     plt.tight_layout()
+        #     plt.savefig(output)
+        #     plt.close()
+        #     print(f"File created: {output} ")
+
+
+#################
+## hls stacks prep
+#################
+
+#
+# def apply_fmask(self, sentinel_stack_path, fmask_path, output_file):
+#     CLOUD_BIT = 1 << 1     # Bit 1 for clouds
+#     CLOUD_SHADOW_BIT = 1 << 3  # Bit 3 for cloud shadow
+#
+#     with rasterio.open(sentinel_stack_path) as sentinel_stack, rasterio.open(fmask_path) as fmask:
+#         fmask_data = fmask.read(1)
+#
+#         # Cloud and cloud shadow masks
+#         cloud_mask = (fmask_data & CLOUD_BIT) != 0
+#         cloud_shadow_mask = (fmask_data & CLOUD_SHADOW_BIT) != 0
+#         combined_mask = cloud_mask | cloud_shadow_mask
+#
+#         # masked_data = np.empty_like(sentinel_stack.read(), dtype=rasterio.float32)
+#         for band in range(sentinel_stack.count):
+#             band_data = sentinel_stack.read(band + 1)
+#             # masked_band = np.where(combined_mask, -9999, band_data) -9999 is no good.
+#             masked_data[band] = np.ma.masked_where(combined_mask, band_data)
+#
+#             ## now redundant
+#             # masked_data[band] = masked_band
+#
+#         output_profile = sentinel_stack.profile.copy()
+#         output_profile.update(dtype=rasterio.float32)#, nodata=-9999)
+#         with rasterio.open(output_file, 'w', **output_profile) as dest:
+#             dest.write(masked_data)
+
+#
+#
+#
+#
+#
+# def forest_loss_mask(self, sentinel_stacks, forest_loss_path, output_path, reference_year=2020):
+#     for sentinel_file in os.listdir(sentinel_stacks):
+#         if sentinel_file.endswith('_agb_radd_stack.tif'):  # Adjust as per your naming convention
+#             sentinel_stack_path = os.path.join(sentinel_stacks, sentinel_file)
+#             with rasterio.open(sentinel_stack_path) as sentinel_stack:
+#                 sentinel_bounds = sentinel_stack.bounds
+#                 sentinel_crs = sentinel_stack.crs
+#
+#                 for forest_loss_file in os.listdir(forest_loss_path):
+#                     if forest_loss_file.endswith(".tif"):
+#                         forest_loss_file_path = os.path.join(forest_loss_path, forest_loss_file)
+#                         with rasterio.open(forest_loss_file_path) as forest_loss:
+#                             # if not box(*sentinel_bounds).intersects(box(*forest_loss.bounds)):
+#                             #     continue
+#
+#                             forest_loss_data = np.zeros((1, sentinel_stack.height, sentinel_stack.width), dtype=rasterio.float32)
+#                             transform, width, height = calculate_default_transform(
+#                                 forest_loss.crs, sentinel_crs, forest_loss.width, forest_loss.height, *forest_loss.bounds,
+#                                 dst_width=sentinel_stack.width, dst_height=sentinel_stack.height)
+#                             reproject(
+#                                 source=rasterio.band(forest_loss, 1),
+#                                 destination=forest_loss_data[0],
+#                                 src_transform=forest_loss.transform,
+#                                 src_crs=forest_loss.crs,
+#                                 dst_transform=sentinel_stack.transform,
+#                                 dst_crs=sentinel_crs,
+#                                 resampling=Resampling.nearest)
+#
+#                             sentinel_data = sentinel_stack.read()
+#
+#                             # Check file type and apply mask
+#                             if 'treecover' in forest_loss_file:
+#                                 mask_condition = forest_loss_data[0] < 80
+#                             elif 'lossyear' in forest_loss_file:
+#                                 current_year = reference_year - 2000  # Adjust based on your reference year format
+#                                 mask_condition = (forest_loss_data[0] > 0) & (forest_loss_data[0] < current_year)
+#
+#                             sentinel_data[:, mask_condition] = sentinel_stack.nodata
+#
+#                             output_profile = sentinel_stack.profile.copy()
+#                             output_file_name = sentinel_file.replace('_agb_radd_stack.tif', '_agb_radd_forest_stack.tif')
+#                             output_file_path = os.path.join(output_path, output_file_name)
+#                             with rasterio.open(output_file_path, 'w', **output_profile) as dst:
+#                                 dst.write(sentinel_data)
+#                             print(f"Masked with {forest_loss_file} and saved to {output_file_name}")
+#
+
+#
+# def forest_loss_mask(self, sentinel_stack_path, forest_loss_path, output_path, date_threshold):
+#     """
+#     Mask Sentinel-2 stack with Hansen forest loss data. Mask conditions vary by file type.
+#
+#     Args:
+#         sentinel_stack_path (str): Path to the Sentinel-2 stack file.
+#         forest_path (str): Directory containing Hansen forest loss data.
+#         output_path (str): Output directory for the masked files.
+#         date_threshold (int): Threshold year for the loss_year data.
+#     """
+#     # Define the CRS for WGS84
+#     wgs84_crs = 'EPSG:4326'
+#
+#     for sentinel_file in os.listdir(sentinel_stack_path):
+#         if sentinel_file.endswith('_stack.tif'):
+#             sentinel_stack_full_path = os.path.join(sentinel_stack_path, sentinel_file)
+#             tile, date = sentinel_file.split('_')[1], sentinel_file.split('_')[2]
+#
+#             # Identify the corresponding Hansen file
+#             for forest_file in os.listdir(forest_loss_path):
+#                 if tile in forest_file and ('treecover2000' in forest_file or 'loss_year' in forest_file):
+#                     forest_full_path = os.path.join(forest_loss_path, forest_file)
+#
+#                     with rasterio.open(sentinel_stack_full_path) as sentinel, rasterio.open(forest_full_path) as forest:
+#                         # Check if CRS and resolution match, otherwise reproject
+#                         if sentinel.crs != forest.crs or sentinel.res != forest.res:
+#                             # Perform re-projection as needed (example given in the previous function)
+#                             pass
+#
+#                         # Determine mask condition based on file type
+#                         if 'treecover2000' in forest_file:
+#                             # Mask treecover2000 data: values < 80 are masked
+#                             mask_condition = forest.read(1) < 80
+#                         elif 'loss_year' in forest_file:
+#                             # Mask loss_year data: mask all years before June 2021
+#                             # Assuming loss_year data is encoded as years since 2000
+#                             mask_year = forest.read(1) + 2000
+#                             mask_condition = mask_year < date_threshold
+#                         else:
+#                             # Skip if file does not match expected patterns
+#                             continue
+#
+#                         # Apply mask
+#                         sentinel_data = sentinel.read()
+#                         sentinel_data[:, mask_condition] = 0  # Assuming 0 is the nodata value
+#
+#                         # Write output
+#                         output_file = os.path.join(output_path, sentinel_file.replace('_stack.tif', '_masked.tif'))
+#                         with rasterio.open(output_file, 'w', **sentinel.profile) as dst:
+#                             dst.write(sentinel_data)
+#
+#
+#
+# def forest_loss_mask(self, sentinel_stacks, forest_loss_path, output_path):
+#     for sentinel_file in os.listdir(sentinel_stacks):
+#         if sentinel_file.endswith('_agb_radd_stack.tif'):  # Assuming you're applying this after AGB merging
+#             sentinel_stack_path = os.path.join(sentinel_stacks, sentinel_file)
+#             with rasterio.open(sentinel_stack_path) as sentinel_stack:
+#                 sentinel_bounds = sentinel_stack.bounds
+#                 sentinel_crs = sentinel_stack.crs
+#
+#                 # Attempt to apply mask with each forest loss file
+#                 for forest_loss_file_path in os.listdir(forest_loss_path):
+#                     with rasterio.open(os.path.join(forest_loss_path,forest_loss_file_path)) as forest_loss:
+#                         # Skip if there's no overlap
+#                         if not box(*sentinel_bounds).intersects(box(*forest_loss.bounds)):
+#                             continue
+#
+#                         # Reproject forest loss data to match Sentinel stack CRS and resolution
+#                         forest_loss_data = np.zeros((1, sentinel_stack.height, sentinel_stack.width), dtype=rasterio.float32)
+#                         transform, width, height = calculate_default_transform(
+#                             forest_loss.crs, sentinel_stack.crs, forest_loss.width, forest_loss.height, *forest_loss.bounds,
+#                             dst_width=sentinel_stack.width, dst_height=sentinel_stack.height)
+#                         reproject(
+#                             source=rasterio.band(forest_loss, 1),
+#                             destination=forest_loss_data[0],
+#                             src_transform=forest_loss.transform,
+#                             src_crs=forest_loss.crs,
+#                             dst_transform=transform,
+#                             dst_crs=sentinel_stack.crs,
+#                             resampling=Resampling.nearest)
+#
+#                         # Apply the mask
+#                         sentinel_data = sentinel_stack.read()
+#                         mask = forest_loss_data[0] < 80
+#                         sentinel_data[:, mask] = sentinel_stack.nodata
+#
+#                         # Write the masked data to a new file
+#                         output_profile = sentinel_stack.profile.copy()
+#                         output_file_name = sentinel_file.replace('_with_agb.tif', '_masked.tif')
+#                         output_file_path = os.path.join(output_path, output_file_name)
+#                         with rasterio.open(output_file_path, 'w', **output_profile) as dst:
+#                             dst.write(sentinel_data)
+#                         print(f"Masked with {os.path.basename(forest_loss_file_path)} and saved to {output_file_name}")
+#                         break  # Stop after successful masking
+
+
+
+
+#################
+## dataset management
+#################
+
+# def split_dataset(self, ):
+#     # Create directories if they don't exist
+#     os.makedirs(self.train_dir, exist_ok=True)
+#     os.makedirs(self.val_dir, exist_ok=True)
+#     os.makedirs(self.test_dir, exist_ok=True)
+#
+#     # Step 1: Identify and move unique tiles to the test set
+#     unique_files = self.find_unique_tiles()
+#     self.move_files(unique_files, self.test_dir)
+#
+#     # Step 2: Split remaining files into train and validation sets
+#     remaining_files = [file for file in os.listdir(self.source_dir) if file.endswith('.tif')]
+#     train_files, val_files = train_test_split(remaining_files, test_size=self.val_split, random_state=42)
+#
+#     # Move files to their respective directories
+#     self.move_files(train_files, self.train_dir)
+#     self.move_files(val_files, self.val_dir)
+#
+
+
+# def split_dataset(self, folder_path, val_split=0.2):
+#     train_dir = os.path.join(folder_path, 'train')
+#     val_dir = os.path.join(folder_path, 'val')
+#     os.makedirs(train_dir, exist_ok=True)
+#     os.makedirs(val_dir, exist_ok=True)
+#
+#     # Filter files
+#     files = [f for f in os.listdir(folder_path) if f.endswith('.tif') and ('_radd' in f or '_sentinel' in f)]
+#
+#     # Group files by common identifier
+#     grouped_files = {}
+#     for file in files:
+#         identifier = "_".join(file.split('_')[:-1])  # Adjust based on your naming convention
+#         grouped_files.setdefault(identifier, []).append(file)
+#
+#     file_groups = list(grouped_files.values())  # List of file groups
+#
+#     # Split file groups into train and val
+#     total_size = len(file_groups)
+#     indices = torch.randperm(total_size).tolist()
+#     split_idx = int(total_size * val_split)
+#
+#     train_groups = [file_groups[i] for i in indices[split_idx:]]
+#     val_groups = [file_groups[i] for i in indices[:split_idx]]
+#
+#     # Move files in each group to their respective directories
+#     for group in train_groups:
+#         for f in group:
+#             shutil.move(os.path.join(folder_path, f), train_dir)
+#     for group in val_groups:
+#         for f in group:
+#             shutil.move(os.path.join(folder_path, f), val_dir)
+#
+
+#
+# def split_dataset(self, folder_path, val_split=0.2):
+#     train_dir = os.path.join(folder_path, 'train')
+#     val_dir = os.path.join(folder_path, 'val')
+#     os.makedirs(train_dir, exist_ok=True)
+#     os.makedirs(val_dir, exist_ok=True)
+#
+#     # Filter files
+#     files = [f for f in os.listdir(folder_path) if f.endswith('.tif') and ('_radd' in f or '_sentinel' in f)]
+#
+#     # Split into train and val
+#     total_size = len(files)
+#     indices = torch.randperm(total_size).tolist()
+#     split_idx = int(total_size * val_split)
+#
+#     train_files = [files[i] for i in indices[split_idx:]]
+#     val_files = [files[i] for i in indices[:split_idx]]
+#
+#     # Move files
+#     for f in train_files:
+#         shutil.move(os.path.join(folder_path, f), train_dir)
+#     for f in val_files:
+#         shutil.move(os.path.join(folder_path, f), val_dir)
+
+
+#
+# def split_dataset(self, source_dir, pairs):
+#     os.makedirs(self.train_dir, exist_ok=True)
+#     os.makedirs(self.val_dir, exist_ok=True)
+#
+#     dataset = CustomDataset(source_dir, self.pairs)
+#     total_size = len(dataset)
+#     val_size = int(total_size * self.val_split)
+#     train_size = total_size - val_size
+#     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+#
+#     # Move files to their respective directories
+#     for i in train_dataset.indices:
+#         sentinel_file, radd_file = dataset[i]
+#         if not os.path.exists(os.path.join(self.train_dir, os.path.basename(sentinel_file))):
+#             shutil.move(sentinel_file, self.train_dir)
+#         if not os.path.exists(os.path.join(self.train_dir, os.path.basename(radd_file))):
+#             shutil.move(radd_file, self.train_dir)
+#
+#     for i in val_dataset.indices:
+#         sentinel_file, radd_file = dataset[i]
+#         if not os.path.exists(os.path.join(self.val_dir, os.path.basename(sentinel_file))):
+#             shutil.move(sentinel_file, self.val_dir)
+#         if not os.path.exists(os.path.join(self.val_dir, os.path.basename(radd_file))):
+#             shutil.move(radd_file, self.val_dir)
+
+
+#################
+## test run analysis
+#################
+
+
+# The test_run_analysis script
+# import os
+# import glob
+# from src.test_analysis import TestAnalysis
+# import pandas as pd
+# pd.set_option('display.max_rows', 500)
+# pd.set_option('display.max_columns', 500)
+# pd.set_option('display.width', 1000)
+#
+# # Directory containing all log directories
+# base_log_dir = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs"
+#
+# # Initialize a list to hold all the metrics data
+# all_metrics = []
+#
+# # Iterate over each model's log directory
+# for model_dir in os.listdir(base_log_dir):
+#     model_log_dir = os.path.join(base_log_dir, model_dir)
+#     if os.path.isdir(model_log_dir):
+#         # Find the JSON file in the model's log directory
+#         json_files = glob.glob(os.path.join(model_log_dir, '*.json'))
+#         for json_file in json_files:
+#             print(f"Analyzing {json_file}")
+#             analysis = TestAnalysis(json_file)
+#             metrics = analysis.get_average_metrics()
+#             metrics['model'] = model_dir  # Add the model name to the metrics
+#             all_metrics.append(metrics)
+#
+# # Create a DataFrame from the collected metrics data
+# df = pd.DataFrame(all_metrics)
+#
+# # Set the model as the index of the DataFrame
+# df.set_index('model', inplace=True)
+#
+# # Display the table
+# print(df)
+#
+# # Save the DataFrame to CSV
+# csv_file = os.path.join(base_log_dir, 'model_metrics_test.csv')
+# df.to_csv(csv_file)
+# print(f"Metrics saved to {csv_file}")
+
+
+
+
+
+
+
+# # The test_run_analysis script
+# import os
+# import glob
+# from src.test_analysis import TestAnalysis
+# import pandas as pd
+# import re
+# pd.set_option('display.max_rows', 500)
+# pd.set_option('display.max_columns', 500)
+# pd.set_option('display.width', 1000)
+#
+# def get_base_model_name(dir_name):
+#     # Ensure we only process directories that start with 'best'
+#     if not dir_name.startswith('best'):
+#         return None
+#
+#     # Split the directory name and keep only relevant parts
+#     # We want to keep the model type and minalerts value but ignore the specific run number
+#     parts = dir_name.split('_')
+#     # Exclude parts that are purely numeric or start with "run"
+#     # Keep the minalerts value by checking for its presence
+#     base_parts = [part for part in parts if not part.isnumeric() and not part.startswith('run') or 'minalerts' in part]
+#     base_model_name = '_'.join(base_parts)
+#     return base_model_name
+#
+# # Directory containing all log directories
+# base_log_dir = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs"
+#
+# # Initialize a dictionary to group log files by their base model names
+# model_logs = {}
+#
+# # Gather all JSON files and group them by their base model name
+# for model_dir in os.listdir(base_log_dir):
+#     model_log_dir = os.path.join(base_log_dir, model_dir)
+#     if os.path.isdir(model_log_dir) and model_dir.startswith('best'):
+#         base_model_name = get_base_model_name(model_dir)
+#         if base_model_name:
+#             json_files = glob.glob(os.path.join(model_log_dir, '*.json'))
+#             if base_model_name in model_logs:
+#                 model_logs[base_model_name].extend(json_files)
+#             else:
+#                 model_logs[base_model_name] = json_files
+# # Initialize a list to hold all the metrics data
+# all_metrics = []
+#
+# # Analyze the metrics for each base model name
+# for base_model, log_files in model_logs.items():
+#     print(f"Analyzing {base_model}")
+#     analysis = TestAnalysis(log_files)
+#     metrics = analysis.get_average_metrics()
+#     if metrics:  # Ensure there is data to add
+#         metrics['model'] = base_model  # Add the base model name to the metrics
+#         all_metrics.append(metrics)
+#
+# # Create a DataFrame from the collected metrics data
+# df = pd.DataFrame(all_metrics)
+#
+# # Set the model as the index of the DataFrame
+# df.set_index('model', inplace=True)
+#
+# # Display the table
+# print(df)
+#
+# # Save the DataFrame to CSV
+# csv_file = os.path.join(base_log_dir, 'model_metrics_test.csv')
+# df.to_csv(csv_file)
+# print(f"Metrics saved to {csv_file}")
+
+
+
+#################
+## model run analysis
+#################
+
+
+# # run_model_analysis.py
+#
+# import matplotlib.pyplot as plt
+# from src.model_analysis import ModelAnalysis
+#
+# # Paths to your log files
+# log_files = {
+#     # "Prithvi_no_finetune": "path/to/prithvi_no_finetune.log.json",
+#     "Prithvi_finetune": "E:\PycharmProjects\hls-foundation-os\Prithvi-100m/best_mIoU_iter_1000_minalerts_10000_prithvi.log.json",
+#     "UNet": "E:\PycharmProjects\hls-foundation-os\Prithvi-100m/best_mIoU_iter_1000_minalerts_10000_unet.log.json",
+#
+# }
+#
+# # Initialize ModelAnalysis objects
+# analyses = {name: ModelAnalysis(log_file) for name, log_file in log_files.items()}
+#
+# # Plot metrics
+#
+# metrics = ["aAcc", "mIoU", "mAcc", "IoU.Forest", "IoU.Disturbed_Forest", "Acc.Forest", "Acc.Disturbed_Forest"]
+# for metric in metrics:
+#     fig, ax = plt.subplots()
+#     for name, analysis in analyses.items():
+#         analysis.plot_metric(metric, ax, label=name)
+#
+#     ax.set_ylim([0, 1])
+#     plt.title(metric)
+#     plt.savefig(f'E:\Data\Results\Prithvi_model_analysis_images/{metric}_comparison.png')
+#     plt.close()
+#
+
+
+
+
+#################
+## inference run analysis
+#################
+
+# import matplotlib.pyplot as plt
+# import os
+# from src.model_analysis import plot_image_triplet
+#
+# model_config_pairs = [
+#     ("Prithvi-100m_backscatter/best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth", "forest_disturbances_config_backscatter.py"),
+#     ("Prithvi-100m_coherence/best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth", "forest_disturbances_config_coherence.py"),
+#     ("Prithvi-100m_burnscars/best_mIoU_iter_1000_minalerts_15000_prithvi_burnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
+#     ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth","forest_disturbances_config.py"),
+#
+# ]
+#
+# image_basenames = [
+#     "2023290_T50MKE_agb_radd_fmask_stack_1024_3072",
+#     "2023276_T49MDU_agb_radd_fmask_stack_2048_1024",
+#     "2023271_T49MDU_agb_radd_fmask_stack_2048_1024",
+#     "2023245_T50MKE_agb_radd_fmask_stack_2048_512",
+#     "2023241_T49MDU_agb_radd_fmask_stack_2048_1024",
+#     "2023111_T49MET_agb_radd_fmask_stack_512_512",
+#     "2023076_T49MET_agb_radd_fmask_stack_512_512"
+# ]
+#
+# # Directory where you want to save the combined images
+# save_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results\comparisons"
+# os.makedirs(save_path, exist_ok=True)
+#
+#
+# for image_basename in image_basenames:
+#     plot_image_triplet(
+#     input_path=r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\10000_minalerts\test",
+#     output_path=r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results\best_mIoU_iter_1000_minalerts_15000_prithvi",
+#     ground_truth_path=r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\10000_minalerts\test",
+#     image_basename=image_basename,
+#     save_path=save_path
+#
+#     )
+
+
+#################
+## run test command unet
+#################
+# from mim.commands.test import test
+# import os
+#
+# # Ensure CUDA operations are executed synchronously if necessary
+# os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+#
+# # Define the parameters for testing
+# package_name = 'mmsegmentation'
+# config_path = 'E:\hls-foundation-os\configs/forest_distrubances_config.py'
+# ckpt_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\best_mIoU_iter_1000.pth"#"E:/burn_scars_Prithvi_100M.pth"
+#
+# # Specify the metrics to evaluate
+# metrics = ['mIoU']
+#
+# # Call the test function
+# success, message = test(package=package_name,
+#                         config=config_path,
+#                         checkpoint=ckpt_path)
+#                         # ,eval=metrics)
+#
+# # Check the result
+# if success:
+#     print("Testing completed successfully.")
+# else:
+#     print(f"Testing failed: {message}")
+#
+
+
+
+# import subprocess
+# import json
+#
+# # Define the paths to your config and checkpoint files
+# config_path = r"E:\hls-foundation-os\configs\unet_forest_disturbance_config.py"
+# checkpoint_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\best_mIoU_iter_1000_minalerts_10000_unet.pth"
+#
+# # Define the command to run the mmseg testing script directly
+# command = [
+#     'python',
+#     r'c:\anaconda3\envs\prithvi-100m\lib\site-packages\mmseg\.mim\tools\test.py',
+#     config_path,
+#     checkpoint_path,
+#     '--eval', 'mIoU',
+#     '--launcher', 'none'  # Assuming you are running this in a non-distributed manner
+# ]
+#
+# # Execute the command
+# subprocess.run(command)
+#
+#
+# # Execute the command and capture the output
+# result = subprocess.run(command, capture_output=True, text=True)
+#
+# # Process the result if needed and save to JSON
+# test_results = result.stdout  # or result.stderr based on where the output is
+#
+# # Assuming test_results is already in JSON format or can be converted into a dictionary
+# try:
+#     test_results_dict = json.loads(test_results)
+# except json.JSONDecodeError:
+#     # Handle possible JSON decode error, maybe the output is not in JSON format
+#     print("Error decoding JSON from the test output.")
+#     test_results_dict = {}
+#
+# # Define the path to the JSON file where you want to save the results
+# results_path = "test_results.json"
+#
+# # Append the results to the JSON file
+# with open(results_path, 'a') as json_file:
+#     json.dump(test_results_dict, json_file)
+#     json_file.write('\n')  # Add a newline to separate entries
+
+
+
+#################
+## run test command prithvi
+#################
+# import subprocess
+# import os
+#
+# models = [
+#     "best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth",
+#     "best_mIoU_iter_300_minalerts_15000_prithvi_final_run2.pth",
+#     "best_mIoU_iter_500_minalerts_15000_prithvi_final_run3.pth",
+#     "best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1.pth",
+# "best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth",
+# "best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth"
+# ]
+#
+# base_ckpt_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m"
+# base_log_dir = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs"
+# config_path = r"E:\hls-foundation-os\configs\forest_disturbances_config.py"
+# output_images_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results"  # Specify your output image directory
+#
+#
+# for model in models:
+#     # Construct checkpoint path
+#     checkpoint_path = os.path.join(base_ckpt_path, model)
+#
+#     # Create a specific log directory for each model
+#     model_log_dir = os.path.join(base_log_dir, os.path.splitext(model)[0])
+#     if not os.path.exists(model_log_dir):
+#         os.makedirs(model_log_dir)
+#
+#     # Define the command to run the mmseg testing script for the current model
+#     command = [
+#         'python',
+#         r'c:\anaconda3\envs\prithvi-100m\lib\site-packages\mmseg\.mim\tools\test.py',
+#         config_path,
+#         checkpoint_path,
+#         '--out', os.path.join(model_log_dir, 'results.pkl'),
+#         '--eval', 'mIoU',
+#         # '--show-dir', output_images_path,  # No need, infere3nce does this for us. Directory to save visualization results
+#
+#         '--work-dir', model_log_dir,
+#         '--launcher', 'none'
+#     ]
+#
+#     # Execute the command
+#     print(f"Testing with model: {model}")
+#     subprocess.run(command)
+#     print(f"Finished testing with model: {model}\n")
+#
+
+
+#################
+## run inference command
+#################
+# import subprocess
+#
+# # Define command parameters
+# config_path = "E:\hls-foundation-os\configs/unet_forest_disturbance_config.py" #forest_distrubances_config.py" #burn_scars_config.py"
+# ckpt_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\best_mIoU_iter_1000_minalerts_12500_unet.pth" #"E:/burn_scars_Prithvi_100M.pth"
+# input_path = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\10000_minalerts\test" #r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\inference_test\best_sample/"
+#
+# output_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results" #r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\inference_test"
+# input_type = "tif"
+# bands = "[0,1,2,3,4,5]"
+# out_channels = 1
+#
+# # Construct the command
+# command = [
+#     'python', 'model_inference.py',
+#     '-config', config_path,
+#     '-ckpt', ckpt_path,
+#     '-input', input_path,
+#     '-output', output_path,
+#     '-input_type', input_type,
+#     '-bands', bands,
+#     # '-out_channels', str(out_channels)
+# ]
+#
+# # Run the command
+# subprocess.run(command)
+
+
+# import subprocess
+# import os
+#
+# # List of model checkpoint filenames
+# models = [
+# "/Prithvi-100m_backscatter/best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth",
+# "/Prithvi-100m_coherence/best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth",
+# "/Prithvi-100m_burnscars/best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth"
+# ]
+#
+# base_ckpt_path = r"E:\PycharmProjects\hls-foundation-os"
+# base_output_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results"
+#
+#
+#
+# ## CANT RUN UNET AND PRITHVI CONFIGS AT THE SAME TIME
+# config_path = r"E:\hls-foundation-os\configs/forest_disturbances_config.py"
+# config_path_burnscars = r"E:\hls-foundation-os\configs/forest_disturbances_config_burnscars.py"
+# config_path_coherence = r"E:\hls-foundation-os\configs/forest_disturbances_config_coherence.py"
+# config_path_backscatter = r"E:\hls-foundation-os\configs/forest_disturbances_config_backscatter.py"
+#
+# input_path = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\15000_minalerts\test/"
+# input_type = "tif"
+# bands = "[0,1,2,3,4,5]"
+# out_channels = 1
+#
+# for model in models:
+#     # Construct checkpoint path
+#     ckpt_path = os.path.join(base_ckpt_path, model)
+#
+#     # Create a specific output directory for each model
+#     model_output_path = os.path.join(base_output_path, os.path.splitext(model)[0])
+#     if not os.path.exists(model_output_path):
+#         os.makedirs(model_output_path)
+#
+#     # Construct the command
+#     command = [
+#         'python', 'model_inference.py',
+#         '-config', config_path,
+#         '-ckpt', ckpt_path,
+#         '-input', input_path,
+#         '-output', model_output_path,
+#         '-input_type', input_type,
+#         '-bands', bands,
+#         # '-out_channels', str(out_channels)
+#     ]
+#
+#     # Run the command
+#     subprocess.run(command)
+
+
+
+# import subprocess
+# import os
+#
+# # Model checkpoints and their corresponding configuration paths
+# model_config_pairs = [
+#     ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth","forest_disturbances_config.py"),
+#     # ("Prithvi-100m_backscatter/best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth", "forest_disturbances_config_backscatter.py"),
+#     # ("Prithvi-100m_coherence/best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth", "forest_disturbances_config_coherence.py"),
+#     # ("Prithvi-100m_burnscars/best_mIoU_iter_400_minalerts_15000_prithvi_birnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
+# ]
+#
+# base_ckpt_path = r"E:\PycharmProjects\hls-foundation-os"
+# base_config_path = r"E:\hls-foundation-os\configs"
+# base_output_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m\test_logs\test_image_results"
+#
+# input_path = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm\15000_minalerts\test/"
+# input_type = "tif"
+# bands = "[0,1,2,3,4,5]"
+#
+# for model, config in model_config_pairs:
+#     # Construct checkpoint and config paths
+#     ckpt_path = os.path.join(base_ckpt_path, model)
+#     config_path = os.path.join(base_config_path, config)
+#
+#     # Create a specific output directory for each model
+#     model_output_path = os.path.join(base_output_path, os.path.splitext(model)[0])
+#     if not os.path.exists(model_output_path):
+#         os.makedirs(model_output_path)
+#
+#     # Construct the command
+#     command = [
+#         'python', 'model_inference.py',
+#         '-config', config_path,
+#         '-ckpt', ckpt_path,
+#         '-input', input_path,
+#         '-output', model_output_path,
+#         '-input_type', input_type,
+#         '-bands', bands,
+#     ]
+#
+#     # Run the command
+#     subprocess.run(command)
+
+
+
+
+#################
+## run condat command
+#################
+# import subprocess
+# import os
+# import mim
+# os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+# import torch
+# # Command and arguments
+# # command = "mim"
+# # args = ["train", "mmsegmentation", "--launcher", "none", "--gpus", "1", "E:\hls-foundation-os\configs/forest_distrubances_config.py"]
+#
+# # Running the command
+# # subprocess.run([command] + args)
+#
+#
+#
+# from mim.commands.train import train
+#
+# # Define the parameters for training
+# package_name = 'mmsegmentation'
+# config_path = "E:\hls-foundation-os\configs/forest_disturbances_config.py"
+# num_gpus = 1
+#
+# # Call the train function
+# success, message = train(package=package_name, config=config_path, gpus=num_gpus)
+#
+# # Check the result
+# if success:
+#     print("Training completed successfully.")
+# else:
+#     print(f"Training failed: {message}")
+#
+# #from mim.commands.test import t
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #
 # def find_corresponding_files(self, tile_id):
 #     sen2_files = [os.path.join(self.sen2_stack_path, filename) for filename in os.listdir(self.sen2_stack_path)

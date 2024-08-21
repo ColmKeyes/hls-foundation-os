@@ -86,6 +86,10 @@ if __name__ == '__main__':
 
 
 
+    ######
+    ## examples and utilites
+    #####
+
     #model_funcs.normalize_single_file_rasterio(r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\training\corrected_HLS.S30.T49MFU.2022083T023551.v2.0.Fmask_3072_1024_sentinel.tif")
 
 

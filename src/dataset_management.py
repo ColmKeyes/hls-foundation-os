@@ -102,24 +102,6 @@ class DatasetManagement:
         for file in files:
             shutil.move(os.path.join(self.source_dir, file), os.path.join(destination, file))
 
-    # def split_dataset(self, ):
-    #     # Create directories if they don't exist
-    #     os.makedirs(self.train_dir, exist_ok=True)
-    #     os.makedirs(self.val_dir, exist_ok=True)
-    #     os.makedirs(self.test_dir, exist_ok=True)
-    #
-    #     # Step 1: Identify and move unique tiles to the test set
-    #     unique_files = self.find_unique_tiles()
-    #     self.move_files(unique_files, self.test_dir)
-    #
-    #     # Step 2: Split remaining files into train and validation sets
-    #     remaining_files = [file for file in os.listdir(self.source_dir) if file.endswith('.tif')]
-    #     train_files, val_files = train_test_split(remaining_files, test_size=self.val_split, random_state=42)
-    #
-    #     # Move files to their respective directories
-    #     self.move_files(train_files, self.train_dir)
-    #     self.move_files(val_files, self.val_dir)
-    #
 
     def split_tiles(self, source_folder):
 
@@ -155,64 +137,6 @@ class DatasetManagement:
     ##########
     ## Sets radd and sen2 stacks into val and train folders
     ##########
-
-    # def split_dataset(self, folder_path, val_split=0.2):
-    #     train_dir = os.path.join(folder_path, 'train')
-    #     val_dir = os.path.join(folder_path, 'val')
-    #     os.makedirs(train_dir, exist_ok=True)
-    #     os.makedirs(val_dir, exist_ok=True)
-    #
-    #     # Filter files
-    #     files = [f for f in os.listdir(folder_path) if f.endswith('.tif') and ('_radd' in f or '_sentinel' in f)]
-    #
-    #     # Group files by common identifier
-    #     grouped_files = {}
-    #     for file in files:
-    #         identifier = "_".join(file.split('_')[:-1])  # Adjust based on your naming convention
-    #         grouped_files.setdefault(identifier, []).append(file)
-    #
-    #     file_groups = list(grouped_files.values())  # List of file groups
-    #
-    #     # Split file groups into train and val
-    #     total_size = len(file_groups)
-    #     indices = torch.randperm(total_size).tolist()
-    #     split_idx = int(total_size * val_split)
-    #
-    #     train_groups = [file_groups[i] for i in indices[split_idx:]]
-    #     val_groups = [file_groups[i] for i in indices[:split_idx]]
-    #
-    #     # Move files in each group to their respective directories
-    #     for group in train_groups:
-    #         for f in group:
-    #             shutil.move(os.path.join(folder_path, f), train_dir)
-    #     for group in val_groups:
-    #         for f in group:
-    #             shutil.move(os.path.join(folder_path, f), val_dir)
-    #
-
-    #
-    # def split_dataset(self, folder_path, val_split=0.2):
-    #     train_dir = os.path.join(folder_path, 'train')
-    #     val_dir = os.path.join(folder_path, 'val')
-    #     os.makedirs(train_dir, exist_ok=True)
-    #     os.makedirs(val_dir, exist_ok=True)
-    #
-    #     # Filter files
-    #     files = [f for f in os.listdir(folder_path) if f.endswith('.tif') and ('_radd' in f or '_sentinel' in f)]
-    #
-    #     # Split into train and val
-    #     total_size = len(files)
-    #     indices = torch.randperm(total_size).tolist()
-    #     split_idx = int(total_size * val_split)
-    #
-    #     train_files = [files[i] for i in indices[split_idx:]]
-    #     val_files = [files[i] for i in indices[:split_idx]]
-    #
-    #     # Move files
-    #     for f in train_files:
-    #         shutil.move(os.path.join(folder_path, f), train_dir)
-    #     for f in val_files:
-    #         shutil.move(os.path.join(folder_path, f), val_dir)
 
     def split_dataset(self, source_folder, destination_directory ,val_split=0.2):
         # Automatically define train and val directories
@@ -256,31 +180,7 @@ class DatasetManagement:
         for idx in val_indices:
             for file_path in pairs[idx]:
                 shutil.move(file_path, val_dir)
-    #
-    # def split_dataset(self, source_dir, pairs):
-    #     os.makedirs(self.train_dir, exist_ok=True)
-    #     os.makedirs(self.val_dir, exist_ok=True)
-    #
-    #     dataset = CustomDataset(source_dir, self.pairs)
-    #     total_size = len(dataset)
-    #     val_size = int(total_size * self.val_split)
-    #     train_size = total_size - val_size
-    #     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-    #
-    #     # Move files to their respective directories
-    #     for i in train_dataset.indices:
-    #         sentinel_file, radd_file = dataset[i]
-    #         if not os.path.exists(os.path.join(self.train_dir, os.path.basename(sentinel_file))):
-    #             shutil.move(sentinel_file, self.train_dir)
-    #         if not os.path.exists(os.path.join(self.train_dir, os.path.basename(radd_file))):
-    #             shutil.move(radd_file, self.train_dir)
-    #
-    #     for i in val_dataset.indices:
-    #         sentinel_file, radd_file = dataset[i]
-    #         if not os.path.exists(os.path.join(self.val_dir, os.path.basename(sentinel_file))):
-    #             shutil.move(sentinel_file, self.val_dir)
-    #         if not os.path.exists(os.path.join(self.val_dir, os.path.basename(radd_file))):
-    #             shutil.move(radd_file, self.val_dir)
+
 
     def plot_7_bands(self, filename):
         file_path = os.path.join(self.output_folder, filename)

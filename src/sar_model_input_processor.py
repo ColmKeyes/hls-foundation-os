@@ -35,28 +35,6 @@ class SARLoader:
 
         return global_min, global_max
 
-    # def compute_global_min_max(self, input_folder, bands=[6, 7]):
-    #     global_min = np.full(len(bands), np.inf)
-    #     global_max = np.full(len(bands), -np.inf)
-    #
-    #     for filename in os.listdir(input_folder):
-    #         if filename.endswith('_sentinel_agb_normalized_sar_masked.tif') and self.data_type in filename:
-    #             filepath = os.path.join(input_folder, filename)
-    #             with rasterio.open(filepath) as src:
-    #                 for i, band_idx in enumerate(bands):
-    #                     band = src.read(band_idx).astype(np.float32)
-    #                     valid_mask = band > self.nodata_value
-    #                     valid_pixels = band[valid_mask]
-    #                     if valid_pixels.size > 0:
-    #
-    #                         index = i - 6  # Subtract 6 to align with the 0-indexed arrays global_min and global_max
-    #                         global_min[index] = min(np.min(valid_pixels), global_min[index])
-    #                         global_max[index] = max(np.max(valid_pixels), global_max[index])
-    #                         # global_min[i - bands[0]] = min(np.min(valid_pixels), global_min[i - bands[0]])
-    #                         # global_max[i - bands[0]] = max(np.max(valid_pixels), global_max[i - bands[0]])
-    #
-    #     return global_min, global_max
-
     def normalize_images_global(self, input_file, output_file, global_min, global_max, bands=[6, 7]):
 
         with rasterio.open(input_file) as src:
