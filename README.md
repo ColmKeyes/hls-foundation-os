@@ -34,17 +34,17 @@
     - `inference_run_analysis.py`: Script for analyzing inference runs
     - `model_run_analysis.py`: Script for analyzing model runs
     - `test_run_analysis.py`: Script for analyzing test runs
-- **configs**: 
+- **configs**: Configuration files for OpenMM 
   - `burn_scars_config.py`: Config for burn scars model
   - `forest_disturbances_config.py`: Config for forest disturbances model
   - `multi_temporal_crop_classification.py`: Config for multi-temporal crop classification
   - `sen1floods11_config.py`: Config for Sentinel-1 floods model
-- **geospatial_fm/**:
+- **geospatial_fm/**: Geospatial Foundation Model
   - `datasets.py`: Datasets utilities and functions
   - `geospatial_fm.py`: Geospatial feature management core functions
   - `geospatial_pipelines.py`: Pipelines for geospatial processing
   - `temporal_encoder_decoder.py`: Temporal encoder-decoder models
-- **src**:
+- **src**: Source code with functions 
   - `custom_hooks.py`: Custom hooks for models
   - `dataset_management.py`: Dataset management utilities
   - `hls_stacks_prep.py`: HLS stack preparation utilities
