@@ -24,7 +24,7 @@ Terminal commands for running model inference and training
 #
 #
 #
- python model_inference.py -config "E:/hls-foundation-os/configs/forest_distrubances_config.py" -ckpt "E:/PycharmProjects/hls-foundation-os/Prithvi-100m/best_mIoU_iter_30.pth" -input "E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\\inference_test" -output "E:/" -input_type tif -bands "[0,1,2,3,4,5]"
+# python model_inference.py -config "E:/hls-foundation-os/configs/forest_distrubances_config.py" -ckpt "E:/PycharmProjects/hls-foundation-os/Prithvi-100m/best_mIoU_iter_30.pth" -input "E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\\inference_test" -output "E:/" -input_type tif -bands "[0,1,2,3,4,5]"
 #
 #
 

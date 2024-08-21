@@ -1,30 +1,71 @@
 # Modifications for Forest Disturbance Detection
 
-### This project, undertaken as part of an internship, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection.
+#### This project, undertaken as part of an internship with VITO Remote Sensing, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection, as well as the model's capacity to fine tune to unseen SAR and InSAR data.
+
+
 
 
 
 ## Overview
-This repository details the extension of the Prithvi-100m model, originally trained on diverse datasets, to assess its performance on new, unseen classifications, specifically focusing on forest disturbance detection using SAR data. The effort centers on evaluating the model's ability to generalize to novel and complex data types, a crucial step in advancing remote sensing applications in forest monitoring.
+### This repository details the extension of the Prithvi-100m model, pre-trained on contiguous US data by teams at NASA and IBM. Thus much of the documentation below is kept from the original repo. Included in this research is model config, preprocessing and running and analysis of the Prithvi model along with a U-Net model used for comparison. 
 
-
-## Modification Details
-Modifications were primarily geared towards adapting the model to effectively process and interpret SAR data, a significant departure from its initial training datasets. This involved recalibrating data preprocessing techniques to handle the unique properties of SAR imagery, ensuring compatibility and optimal input quality. The core of this adaptation was to evaluate the model’s response to unseen data types, particularly in the context of forest disturbances, thereby assessing its robustness and generalization capabilities. These enhancements are crucial for understanding the model's applicability in real-world scenarios, where it encounters diverse and previously unencountered data characteristics.
+## Results
+### While the Prithvi model marginally outperformed a U-Net model for the task of forest disturbance detection, the performance of both models were limited by data quality. A significant result which appeared from this research was that the highest and second highest performing models were U-Net models utilising InSAR and SAR data respectively. This result is in agreement with research conducted on InSAR data in my MSc Thesis, which showed the potential of InSAR coherence measures for forest disturbance detection. 
 
 
 ## Usage Instructions
 
+### Repo Structure
 
-## Results and Findings
+## Project Repository Structure
 
-### Expected Outcomes
-#### Improved Classification Scores: It is anticipated that the modifications and fine-tuning of the Prithvi-100m model will lead to moderate improvements in classification accuracy, particularly when compared to baseline RADD alerts. These enhancements are expected to be evident in metrics such as precision, recall, and overall accuracy.
+## Project Repository Structure
 
-#### Model's Adaptability to SAR Data: A key focus of this project is to explore and demonstrate the model's capacity to adapt to and process SAR data, which is inherently different from the datasets used in its original training. The successful processing and interpretation of SAR imagery for forest disturbance detection would be a significant achievement, highlighting the model's versatility.
+- **bin/**: Main scripts for data preprocessing and analysis
+  - **data_preprocessing_hls**:
+    - `1_hls_run_processing_prep.py`: Step 1 - Prepare HLS processing
+    - `2_dataset_run_management.py`: Step 2 - Manage dataset runs for HLS
+    - `3_model_run_input_processor.py`: Step 3 - Process inputs for model runs
+  - **data_preprocessing_sar**:
+    - `1_sentinel1slc_bsc_coh_processing.py`: Step 1 - Sentinel-1 SLC, BSC, and Coherence processing
+    - `2_sar_model_run_input_processor.py`: Step 2 - Process inputs for SAR model runs
+    - `3_sar_run_processing_prep.py`: Step 3 - Prepare SAR processing runs
+  - **run_analysis**: 
+    - `inference_run_analysis.py`: Script for analyzing inference runs
+    - `model_run_analysis.py`: Script for analyzing model runs
+    - `test_run_analysis.py`: Script for analyzing test runs
+- **configs**: 
+  - `burn_scars_config.py`: Config for burn scars model
+  - `forest_disturbances_config.py`: Config for forest disturbances model
+  - `multi_temporal_crop_classification.py`: Config for multi-temporal crop classification
+  - `sen1floods11_config.py`: Config for Sentinel-1 floods model
+- **geospatial_fm/**:
+  - `datasets.py`: Datasets utilities and functions
+  - `geospatial_fm.py`: Geospatial feature management core functions
+  - `geospatial_pipelines.py`: Pipelines for geospatial processing
+  - `temporal_encoder_decoder.py`: Temporal encoder-decoder models
+- **src**:
+  - `custom_hooks.py`: Custom hooks for models
+  - `dataset_management.py`: Dataset management utilities
+  - `hls_stacks_prep.py`: HLS stack preparation utilities
+  - `model_analysis.py`: Functions for model analysis
+  - `model_input_processor.py`: Process model input data
+  - `model_management.py`: Manage model training and inference
+  - `sar_model_input_processor.py`: SAR model input processor
+  - `sar_processing_prep.py`: Prepare SAR data processing
+  - `test_analysis.py`: Analyze test metrics
+  - `utility_functions.py`: General utility functions for data processing
 
-
-
-
+- `dump_file.py`: File for deprecated or unused code
+- `model_inference.py`: Script for model inference
+- `model_inference_terminal_commands.py`: Commands for terminal-based model inference
+- `run_conda_command.py`: Script for running conda environment commands
+- `run_config.py`: Script for running configuration-based model training
+- `run_inference_command.py`: Script for running model inference commands
+- `run_test_command_prithvi.py`: Script for testing Prithvi model
+- `run_test_command_unet.py`: Script for testing UNet model
+- `run_unet_model_command.py`: Script for running UNet model training
+- `PREVIOUSLY_USED_COMMANDS.txt`: Text file with previously used commands
 
 # Image segmentation by foundation model finetuning
 
