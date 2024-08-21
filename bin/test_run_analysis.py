@@ -1,4 +1,14 @@
 
+# -*- coding: utf-8 -*-
+"""
+Analise and summarize test run metrics from multiple model logs.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : test_run_analysis.py
+"""
+
 
 import os
 import glob

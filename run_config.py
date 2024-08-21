@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Updates configuration settings and runs model training.
+used to ensure reset of model image norm from datasets with alternative data values
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_config.py
+"""
+
 import os
 from mmseg.apis import train_segmentor, init_segmentor, inference_segmentor
 from mmcv import Config

@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Produce inference from checkpoint-model pairs.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_inference_command.py
+"""
 
 
 import subprocess
@@ -9,37 +18,6 @@ base_config_path = r"E:\hls-foundation-os\configs"
 base_input_path = r"E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\globalnorm"
 
 model_config_pairs = [
-    # ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m_unet/best_mIoU_iter_900_minalerts_15000_unet_final_run1.pth", "forest_disturbances_config_unet.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1.pth", "forest_disturbances_config.py"),
-    # ("Prithvi-100m_unet/best_mIoU_iter_1000_minalerts_15000_unet_final_run2.pth","forest_disturbances_config_unet.py"),
-     # ("Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_10000_prithvi_burnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1.pth", "forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run3.pth", "forest_disturbances_config.py")
-    # ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth", "forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run2.pth", "forest_disturbances_config.py")
-    # ("Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run2.pth", "forest_disturbances_config_burnscars.py"),
-    # ("Prithvi-100m_burnscars/best_mIoU_iter_900_minalerts_12500_prithvi_burnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
-    # ("Prithvi-100m/best_mIoU_iter_60_minalerts_15000_prithvi_final_run1.pth", "forest_disturbances_config.py")
-
-
-
-
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1_op.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_400_minalerts_10000_prithvi_final_run2_op.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run3_op.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run1_op.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run2_op.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run3_op.pth","forest_disturbances_config.py"),
-    # ("Prithvi-100m_burnscars/best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1_op.pth","forest_disturbances_config_burnscars.py"),
-    # ("Prithvi-100m_burnscars/best_mIoU_iter_300_minalerts_15000_prithvi_burnscars_final_run2_op.pth","forest_disturbances_config_burnscars.py"),
-    # ("Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run3_op.pth","forest_disturbances_config_burnscars.py"),
-    # ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run1_op.pth",  "forest_disturbances_config_unet.py"),
-    #  ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run2_op.pth","forest_disturbances_config_unet.py"),
-    #   ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run3_op.pth", "forest_disturbances_config_unet.py"),
-    #    ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run1_op.pth", "forest_disturbances_config_unet.py"),
-    #     ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run2_op.pth", "forest_disturbances_config_unet.py"),
-    # ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run3_op.pth", "forest_disturbances_config_unet.py"),
 
     ("Prithvi-100m_coherence/best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run1_op.pth", "forest_disturbances_config_coherence.py"),
     ("Prithvi-100m_coherence/best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run2_op.pth", "forest_disturbances_config_coherence.py"),

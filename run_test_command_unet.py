@@ -1,23 +1,26 @@
+# -*- coding: utf-8 -*-
+"""
+Run testing on UNet models and evaluate mIoU for each checkpoint.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_test_command_unet.py
+"""
+
+
 
 import subprocess
 import os
 
 models = [
-# "best_mIoU_iter_500_minalerts_15000_unet_final_run1_op.pth",
-# "best_mIoU_iter_500_minalerts_15000_unet_final_run2_op.pth",
-# "best_mIoU_iter_500_minalerts_15000_unet_final_run3_op.pth",
-# "best_mIoU_iter_500_minalerts_10000_unet_final_run1_op.pth",
-# "best_mIoU_iter_500_minalerts_10000_unet_final_run2_op.pth",
-# "best_mIoU_iter_500_minalerts_10000_unet_final_run3_op.pth",
-# "best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run1_op.pth",
-# "best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run2_op.pth",
-# "best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run3_op.pth",
-#     "best_mIoU_iter_500_minalerts_15000_unet_backscatter_final_run1_op.pth",
-#     "best_mIoU_iter_400_minalerts_15000_unet_backscatter_final_run2_op.pth"
-#     "best_mIoU_iter_500_minalerts_15000_unet_backscatter_final_run3_op.pth"
+
+"best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run1_op.pth",
+
+    "best_mIoU_iter_500_minalerts_15000_unet_backscatter_final_run1_op.pth",
+
     "best_mIoU_iter_500_minalerts_12500_unet_final_run1_op.pth",
-    "best_mIoU_iter_500_minalerts_12500_unet_final_run2_op.pth",
-    "best_mIoU_iter_500_minalerts_12500_unet_final_run3_op.pth",
+
 ]
 
 base_ckpt_path = r"E:\PycharmProjects\hls-foundation-os\Prithvi-100m_unet"

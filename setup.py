@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+original setup file.
+
+@File    : setup.py
+"""
+
+
 from setuptools import setup
 
 setup(

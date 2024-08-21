@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This script provides analysis and preprocessing of Sentinel-2 HLS imagery data.
-"""
-"""
+
 @Time    : 19/03/2023 23:20
 @Author  : Colm Keyes,
 @Email   : keyesco@tcd.ie

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Analise and compare model performance metrics across different runs.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : model_run_analysis.py
+"""
+
 import matplotlib.pyplot as plt
 import os
 from src.model_analysis import ModelAnalysis

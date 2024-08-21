@@ -1,6 +1,14 @@
 
 
+# -*- coding: utf-8 -*-
+"""
+Utility functions for merging tiffs and finding Sentinel-1 SLC  pairs based on file type and date.
 
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : utility_functions.py
+"""
 
 
 

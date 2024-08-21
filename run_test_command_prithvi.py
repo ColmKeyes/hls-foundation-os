@@ -1,33 +1,28 @@
+# -*- coding: utf-8 -*-
+"""
+Run testing on prithvi model and evaluate mIoU for each checkpoint.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_test_command_prithvi.py
+"""
+
+
+
 import subprocess
 import os
 
 models = [
-    # "best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth",
-    # "best_mIoU_iter_500_minalerts_15000_prithvi_final_run2.pth",
-    # "best_mIoU_iter_500_minalerts_15000_prithvi_final_run3.pth",
-    # "best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1.pth",
-    # "best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run2.pth",
-    # "best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run3.pth",
-    # "best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth",
-    # "best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth"
-# "best_mIoU_iter_1000_minalerts_15000_prithvi_final_run1.pth"
-# "best_mIoU_iter_500_minalerts_10000_prithvi_final_run1_op.pth",
-# "best_mIoU_iter_400_minalerts_10000_prithvi_final_run2_op.pth",
-#     "best_mIoU_iter_500_minalerts_10000_prithvi_final_run3_op.pth",
-# "best_mIoU_iter_400_minalerts_10000_prithvi_final_run3_op.pth",
-# "best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1_op.pth",
-# "best_mIoU_iter_300_minalerts_15000_prithvi_burnscars_final_run2_op.pth",
-# "best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run3_op.pth",
-#     "best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run1_op.pth",
-#     "best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run2_op.pth",
-#     "best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run3_op.pth",
-    # "best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run1_op.pth",
-    # "best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run2_op.pth",
-    # "best_mIoU_iter_500_minalerts_15000_prithvi_coherence_final_run3_op.pth",
-# "best_mIoU_iter_400_minalerts_12500_prithvi_final_run1_op.pth",
-# "best_mIoU_iter_400_minalerts_12500_prithvi_final_run2_op.pth",
-# "best_mIoU_iter_400_minalerts_12500_prithvi_final_run3_op.pth",
-"best_mIoU_iter_500_minalerts_12500_prithvi_final_run4_op.pth"
+
+"best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1_op.pth",
+
+    "best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run1_op.pth",
+
+    "best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run1_op.pth",
+
+"best_mIoU_iter_400_minalerts_12500_prithvi_final_run1_op.pth",
+
 ]
 
 base_ckpt_paths = {

@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Run training for a UNet model.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_unet_model_command.py
+"""
+
+
 import subprocess
 import os
 import mim

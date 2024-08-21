@@ -1,5 +1,13 @@
 
+# -*- coding: utf-8 -*-
+"""
+Iterates through configuration files and runs training for each config model.
 
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_conda_command.py
+"""
 
 import os
 from mim.commands.train import train
@@ -11,13 +19,13 @@ os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 package_name = 'mmsegmentation'
 base_config_path = "E:\\hls-foundation-os\\configs"
 config_files = [
-    # "forest_disturbances_config.py",
-    # "forest_disturbances_config_burnscars.py",
-    # "forest_disturbances_config_unet_coherence.py",
-    # "forest_disturbances_config_unet_backscatter.py",
+    "forest_disturbances_config.py",
+    "forest_disturbances_config_burnscars.py",
+    "forest_disturbances_config_backscatter.py",
+    "forest_disturbances_config_coherence.py",
+    "forest_disturbances_config_unet_backscatter.py",
+    "forest_disturbances_config_unet_coherence.py",
     "forest_disturbances_config_unet.py",
-    # "forest_disturbances_config_backscatter.py",
-    # "forest_disturbances_config_coherence.py",
 
 
 ]

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Analise test metrics across multiple runs and calculate average performance.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : test_analysis.py
+"""
+
 import json
 import pandas as pd
 import numpy as np

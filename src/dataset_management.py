@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-"""
-"""
+DatasetManagement class created for preprocessing datasets and basic plotting
+
 @Time    : 7/12/2023 07:49
 @Author  : Colm Keyes
 @Email   : keyesco@tcd.ie
 @File    : preprocessing_pipeline
 """
+
 
 #
 import os

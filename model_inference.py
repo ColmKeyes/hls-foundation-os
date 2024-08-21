@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Originally located within mmseg, altered here.
+changed function: inference_on_files for correct processing.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : model_inference.py
+"""
+
+
 import argparse
 import glob
 import os
@@ -201,66 +213,6 @@ def inference_on_files(config_path, ckpt, input_type, input_path, output_path, b
 
         # Perform inference on the file
         inference_on_file(model, target_image, output_image, custom_test_pipeline)
-#
-# def inference_on_files(config_path, ckpt, input_type, input_path, output_path, bands):
-#     # load model
-#     config = Config.fromfile(config_path)
-#     config.model.backbone.pretrained = None
-#     model = init_segmentor(config, ckpt)
-#
-#     # identify images to predict on
-#     target_images = glob.glob(os.path.join(input_path, "*." + input_type))
-#
-#     print('Identified images to predict on: ' + str(len(target_images)))
-#
-#     # check if output folder available
-#     if not os.path.isdir(output_path):
-#         os.makedirs(output_path)
-#
-#     # modify test pipeline if necessary
-#     custom_test_pipeline = process_test_pipeline(model.cfg.data.test.pipeline, bands)
-#
-#     # for each image predict and save to disk
-#     for i, target_image in enumerate(target_images):
-#         print(f'Working on Image {i}')
-#
-#         # Construct output image path correctly
-#         filename = os.path.basename(target_image)
-#         filename_without_extension = os.path.splitext(filename)[0]
-#         output_filename = f"{filename_without_extension}_pred_.{input_type}"
-#         output_image = os.path.join(output_path, output_filename)
-#
-#         # Perform inference on the file
-#         inference_on_file(model, target_image, output_image, custom_test_pipeline)
-
-
-# def inference_on_files(config_path, ckpt, input_type, input_path, output_path, bands):
-#
-#     # load model
-#     config = Config.fromfile(config_path)
-#     config.model.backbone.pretrained=None
-#     model = init_segmentor(config, ckpt)
-#
-#     # identify images to predict on
-#     target_images = glob.glob(input_path+"*."+input_type)
-#
-#     print('Identified images to predict on: ' + str(len(target_images)))
-#
-#     # check if output folder available
-#     if not os.path.isdir(output_path):
-#         os.mkdir(output_path)
-#
-#     # modify test pipeline if necessary
-#     custom_test_pipeline=process_test_pipeline(model.cfg.data.test.pipeline, bands)
-#
-#     # for each image predict and save to disk
-#     for i, target_image in enumerate(target_images):
-#
-#         print(f'Working on Image {i}')
-#         # output_image = output_path+target_image.split(r"\\")[-1].replace('.' + input_type, '_pred.'+input_type)
-#         output_image = target_image.split(r"\\")[-1].replace('.' + input_type, '_pred.'+input_type)
-#
-#         inference_on_file(model, target_image, output_image, custom_test_pipeline)
 
 def main():
     

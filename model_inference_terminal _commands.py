@@ -1,3 +1,12 @@
+"""
+Terminal commands for running model inference and training
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : model_inference_terminal_commands.py
+"""
+
 # set PL_TORCH_DISTRIBUTED_BACKEND = gloo
 # set NCCL_DEBUG=INFO
 #
@@ -15,7 +24,7 @@
 #
 #
 #
-#  python model_inference.py -config "E:/hls-foundation-os/configs/forest_distrubances_config.py" -ckpt "E:/PycharmProjects/hls-foundation-os/Prithvi-100m/best_mIoU_iter_30.pth" -input "E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\\inference_test" -output "E:/" -input_type tif -bands "[0,1,2,3,4,5]"
+ python model_inference.py -config "E:/hls-foundation-os/configs/forest_distrubances_config.py" -ckpt "E:/PycharmProjects/hls-foundation-os/Prithvi-100m/best_mIoU_iter_30.pth" -input "E:\Data\Sentinel2_data\30pc_cc\Tiles_512_30pc_cc\\inference_test" -output "E:/" -input_type tif -bands "[0,1,2,3,4,5]"
 #
 #
 

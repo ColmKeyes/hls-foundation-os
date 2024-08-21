@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Run testing on UNet models and evaluate mIoU for each checkpoint.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : run_test_command_unet.py
+"""
+
 
 
 import os
@@ -6,45 +16,15 @@ from src.model_analysis import plot_image_triplet
 base_output_path = r"E:\PycharmProjects\hls-foundation-os\test_image_results"
 
 model_paths = [
-    # "Prithvi-100m_backscatter/best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth",
-    # "Prithvi-100m_coherence/best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth",
-    # "Prithvi-100m_burnscars/best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1.pth",
-    # "Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_900_minalerts_15000_unet_final_run1.pth",
-    # "Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1.pth",
-# "Prithvi-100m_unet/best_mIoU_iter_1000_minalerts_15000_unet_final_run2.pth",
-# "Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_10000_prithvi_burnscars_final_run1.pth",
-# "Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run3.pth"
-# "Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth",
-# "Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run2.pth"
-# "Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run2.pth"
-# "Prithvi-100m_burnscars/best_mIoU_iter_900_minalerts_12500_prithvi_burnscars_final_run1.pth"
-# "Prithvi-100m/best_mIoU_iter_60_minalerts_15000_prithvi_final_run1.pth"
 
-    # "Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1_op.pth",
-    # "Prithvi-100m/best_mIoU_iter_400_minalerts_10000_prithvi_final_run2_op.pth",
-    # "Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run3_op.pth",
-    # "Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run1_op.pth",
-    # "Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run2_op.pth",
-    # "Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run3_op.pth",
-    # "Prithvi-100m_burnscars/best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1_op.pth",
-    # "Prithvi-100m_burnscars/best_mIoU_iter_300_minalerts_15000_prithvi_burnscars_final_run2_op.pth",
-    # "Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run3_op.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run1_op.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run2_op.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run3_op.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run1_op.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run2_op.pth",
-    # "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run3_op.pth",
-    # "Prithvi-100m_backscatter/best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run1_op.pth",
-    # "Prithvi-100m_backscatter/best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run2_op.pth",
-    # "Prithvi-100m_backscatter/best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run3_op.pth",
-    # "Prithvi-100m_coherence/best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run1_op.pth",
-    # "Prithvi-100m_coherence/best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run1_op.pth",
-    # "Prithvi-100m_coherence/best_mIoU_iter_500_minalerts_15000_prithvi_coherence_final_run1_op.pth",
-
+    "Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1_op.pth",
+    "Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run1_op.pth",
+    "Prithvi-100m_burnscars/best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1_op.pth",
+    "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run1_op.pth",
+    "Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run1_op.pth",
+    "Prithvi-100m_backscatter/best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run1_op.pth",
+    "Prithvi-100m_coherence/best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run1_op.pth",
     "Prithvi-100m_unet_coherence/best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run1_op.pth",
-    # "Prithvi-100m_unet_backscatter/best_mIoU_iter_500_minalerts_15000_unet_backscatter_final_run1_op.pth",
 
 ]
 image_basenames = [

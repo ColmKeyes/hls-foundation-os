@@ -5,6 +5,334 @@
 
 
 
+##########
+## model_inference
+##########
+
+
+
+
+    # def rename_processed_files(self):
+    #     # Define the pattern to match the filenames
+    #     pattern = re.compile(rf'{self.data_type}_(\d{{8}})_sen2_(\d{{8}})_(T\d{{2}}\w{{3}})_agb_radd_fmask_stack_(\d{{4}})_(\d{{4}})_sentinel_agb_normalized_sar_masked_normalized\.tif$')
+    #
+    #     for filename in os.listdir(self.output_path):
+    #         match = pattern.match(filename)
+    #         if match:
+    #             date1, date2, tile, width, height = match.groups()
+    #
+    #             # Construct the new filename
+    #             new_filename = f"{date2}_{tile}_agb_radd_fmask_stack_{width}_{height}_sentinel_agb_normalized_{self.data_type}_masked_normalized.tif"
+    #             new_filepath = os.path.join(self.output_path, new_filename)
+    #
+    #             # Rename the file
+    #             old_filepath = os.path.join(self.output_path, filename)
+    #             os.rename(old_filepath, new_filepath)
+    #             print(f"Renamed {filename} to {new_filename}")
+    #
+    #             # # Extract the components from the filename
+    #             # data_type, date1, date2, date3, tile, width, height = match.groups()
+    #             #
+    #             # # Construct the new filename
+    #             # new_filename = f"{date3}_{tile}_agb_radd_fmask_stack_{width}_{height}_sentinel_agb_normalized_{self.data_type}_masked_normalized.tif"
+    #             # new_filepath = os.path.join(self.output_path, new_filename)
+    #             #
+    #             # # Rename the file
+    #             # old_filepath = os.path.join(self.output_path, filename)
+    #             # os.rename(old_filepath, new_filepath)
+    #             # print(f"Renamed {filename} to {new_filename}")
+
+
+
+
+
+    # def compute_global_mean_std(self, input_folder, bands=[6, 7]):
+    #     sum_means = np.zeros(len(bands))
+    #     sum_variances = np.zeros(len(bands))
+    #     total_pixels = 0
+    #
+    #     for filename in os.listdir(input_folder):
+    #         if filename.endswith('_normalized.tif') and self.data_type in filename:
+    #             filepath = os.path.join(input_folder, filename)
+    #             with rasterio.open(filepath) as src:
+    #                 for i, band_idx in enumerate(bands):
+    #                     band = src.read(band_idx).astype(np.float32)
+    #                     valid_mask = band > self.nodata_value
+    #                     valid_pixels = band[valid_mask]
+    #                     sum_means[i - bands[0]] += valid_pixels.mean()
+    #                     sum_variances[i - bands[0]] += valid_pixels.var()
+    #                     total_pixels += valid_pixels.size
+    #
+    #     global_means = sum_means / total_pixels
+    #     global_stds = np.sqrt(sum_variances / total_pixels)
+    #
+    #     return global_means, global_stds
+
+
+
+# class SARLoader:
+#     def __init__(self, sen2_stack_dir, output_dir):
+#         self.sen2_stack_dir = sen2_stack_dir
+#         self.output_dir = output_dir
+
+#     def calculate_global_statistics(self, input_folder, data_type, bands=[6, 7] ):
+#         global_min = np.full(len(bands), np.inf)
+#         global_max = np.full(len(bands), -np.inf)
+#         sums = np.zeros(len(bands))
+#         sums_squares = np.zeros(len(bands))
+#         pixel_counts = np.zeros(len(bands))
+#
+#         for filename in os.listdir(input_folder):
+#             if filename.endswith('_sentinel_agb_normalized_sar.tif') and data_type in filename:
+#                 filepath = os.path.join(input_folder, filename)
+#                 with rasterio.open(filepath) as src:
+#                     for i, band_index in enumerate(bands):
+#                         band = src.read(band_index).astype(np.float32)
+#                         valid_mask = band > 0  # Assuming -9999 is the no-data value
+#                         valid_pixels = band[valid_mask]
+#
+#                         # Update min and max
+#                         global_min[i] = min(np.min(valid_pixels), global_min[i])
+#                         global_max[i] = max(np.max(valid_pixels), global_max[i])
+#
+#                         # Update sum and sum of squares for mean and std calculation
+#                         sums[i] += np.sum(valid_pixels)
+#                         sums_squares[i] += np.sum(np.square(valid_pixels))
+#                         pixel_counts[i] += np.count_nonzero(valid_mask)
+#
+#         global_means = sums / pixel_counts
+#         global_stds = np.sqrt((sums_squares / pixel_counts) - np.square(global_means))
+#
+#         return global_min, global_max, global_means, global_stds
+#
+#     def normalize_sar_bands(self, input_file, global_mean, global_std, bands=[6, 7]):
+#         with rasterio.open(input_file) as src:
+#             meta = src.meta.copy()
+#             data = src.read()
+#
+#             for i, band in enumerate(bands):
+#                 # Apply normalization: (band - global_mean) / global_std
+#                 data[band - 1] = (data[band - 1] - global_mean[i]) / global_std[i]
+#
+#             output_file_path = input_file.replace('_sar_masked.tif', '_sar_masked_normalized.tif')
+#             with rasterio.open(output_file_path, 'w', **meta) as dst:
+#                 dst.write(data)
+#
+#             print(f"Normalized SAR bands in {input_file} and saved to {output_file_path}")
+
+    #
+    # def normalize_sar_bands(self, combined_stack_dir, bands_to_normalize=[6, 7], nodata_value=-9999):
+    #     """
+    #     Normalizes the SAR bands in the combined Sentinel-2 and SAR stacks.
+    #
+    #     Args:
+    #         combined_stack_dir (str): Directory containing combined stack files.
+    #         bands_to_normalize (list): Bands to normalize (default is [6, 7] for SAR).
+    #         nodata_value (int): No data value to be ignored in the calculations.
+    #     """
+    #     for filename in os.listdir(combined_stack_dir):
+    #         if filename.endswith('_sentinel_agb_normalized_sar.tif'):
+    #             filepath = os.path.join(combined_stack_dir, filename)
+    #             with rasterio.open(filepath, 'r+') as src:
+    #                 for band_idx in bands_to_normalize:
+    #                     band = src.read(band_idx).astype(np.float32)
+    #                     valid_mask = band != nodata_value
+    #
+    #                     # Normalize the band to the 0-1 range based on its own min and max
+    #                     min_val, max_val = band[valid_mask].min(), band[valid_mask].max()
+    #                     band[valid_mask] = (band[valid_mask] - min_val) / (max_val - min_val)
+    #                     src.write_band(band_idx, band)
+    #
+    # def compute_global_statistics(self, combined_stack_dir, bands=[1, 2, 3, 4, 5, 6], nodata_value=-9999):
+    #     """
+    #     Computes global min, max, mean, and std for specified bands across all files in the directory.
+    #
+    #     Args:
+    #         combined_stack_dir (str): Directory containing combined stack files.
+    #         bands (list): Bands to compute statistics for.
+    #         nodata_value (int): No data value to be ignored in the calculations.
+    #     """
+    #     global_min = np.full(len(bands), np.inf)
+    #     global_max = np.full(len(bands), -np.inf)
+    #     sum_means = np.zeros(len(bands))
+    #     sum_squares = np.zeros(len(bands))
+    #     total_pixels = np.zeros(len(bands))
+    #
+    #     for filename in os.listdir(combined_stack_dir):
+    #         if filename.endswith('_sentinel_agb_normalized_sar.tif'):
+    #             filepath = os.path.join(combined_stack_dir, filename)
+    #             with rasterio.open(filepath) as src:
+    #                 for i, band_idx in enumerate(bands):
+    #                     band = src.read(band_idx).astype(np.float32)
+    #                     valid_mask = band != nodata_value
+    #                     valid_pixels = band[valid_mask]
+    #                     if valid_pixels.size > 0:
+    #                         global_min[i] = min(global_min[i], valid_pixels.min())
+    #                         global_max[i] = max(global_max[i], valid_pixels.max())
+    #                         sum_means[i] += valid_pixels.sum()
+    #                         sum_squares[i] += np.sum(np.square(valid_pixels))
+    #                         total_pixels[i] += valid_pixels.size
+    #
+    #     global_means = sum_means / total_pixels
+    #     global_stds = np.sqrt((sum_squares / total_pixels) - np.square(global_means))
+    #
+    #     return {"min": global_min, "max": global_max, "means": global_means, "stds": global_stds}
+
+
+
+
+##########
+## model_inference
+##########
+
+#
+# def inference_on_files(config_path, ckpt, input_type, input_path, output_path, bands):
+#     # load model
+#     config = Config.fromfile(config_path)
+#     config.model.backbone.pretrained = None
+#     model = init_segmentor(config, ckpt)
+#
+#     # identify images to predict on
+#     target_images = glob.glob(os.path.join(input_path, "*." + input_type))
+#
+#     print('Identified images to predict on: ' + str(len(target_images)))
+#
+#     # check if output folder available
+#     if not os.path.isdir(output_path):
+#         os.makedirs(output_path)
+#
+#     # modify test pipeline if necessary
+#     custom_test_pipeline = process_test_pipeline(model.cfg.data.test.pipeline, bands)
+#
+#     # for each image predict and save to disk
+#     for i, target_image in enumerate(target_images):
+#         print(f'Working on Image {i}')
+#
+#         # Construct output image path correctly
+#         filename = os.path.basename(target_image)
+#         filename_without_extension = os.path.splitext(filename)[0]
+#         output_filename = f"{filename_without_extension}_pred_.{input_type}"
+#         output_image = os.path.join(output_path, output_filename)
+#
+#         # Perform inference on the file
+#         inference_on_file(model, target_image, output_image, custom_test_pipeline)
+
+
+# def inference_on_files(config_path, ckpt, input_type, input_path, output_path, bands):
+#
+#     # load model
+#     config = Config.fromfile(config_path)
+#     config.model.backbone.pretrained=None
+#     model = init_segmentor(config, ckpt)
+#
+#     # identify images to predict on
+#     target_images = glob.glob(input_path+"*."+input_type)
+#
+#     print('Identified images to predict on: ' + str(len(target_images)))
+#
+#     # check if output folder available
+#     if not os.path.isdir(output_path):
+#         os.mkdir(output_path)
+#
+#     # modify test pipeline if necessary
+#     custom_test_pipeline=process_test_pipeline(model.cfg.data.test.pipeline, bands)
+#
+#     # for each image predict and save to disk
+#     for i, target_image in enumerate(target_images):
+#
+#         print(f'Working on Image {i}')
+#         # output_image = output_path+target_image.split(r"\\")[-1].replace('.' + input_type, '_pred.'+input_type)
+#         output_image = target_image.split(r"\\")[-1].replace('.' + input_type, '_pred.'+input_type)
+#
+#         inference_on_file(model, target_image, output_image, custom_test_pipeline)
+
+
+
+
+#################
+## run test command unet
+#################
+
+# models = [
+# "best_mIoU_iter_500_minalerts_15000_unet_final_run1_op.pth",
+# "best_mIoU_iter_500_minalerts_15000_unet_final_run2_op.pth",
+# "best_mIoU_iter_500_minalerts_15000_unet_final_run3_op.pth",
+# "best_mIoU_iter_500_minalerts_10000_unet_final_run1_op.pth",
+# "best_mIoU_iter_500_minalerts_10000_unet_final_run2_op.pth",
+# "best_mIoU_iter_500_minalerts_10000_unet_final_run3_op.pth",
+# "best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run2_op.pth",
+# "best_mIoU_iter_500_minalerts_15000_unet_coherence_final_run3_op.pth",
+#     "best_mIoU_iter_400_minalerts_15000_unet_backscatter_final_run2_op.pth"
+#     "best_mIoU_iter_500_minalerts_15000_unet_backscatter_final_run3_op.pth"
+
+# "best_mIoU_iter_500_minalerts_12500_unet_final_run2_op.pth",
+# "best_mIoU_iter_500_minalerts_12500_unet_final_run3_op.pth",
+
+#################
+## run test command prithvi
+#################
+ #models = [
+    # "best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth",
+    # "best_mIoU_iter_500_minalerts_15000_prithvi_final_run2.pth",
+    # "best_mIoU_iter_500_minalerts_15000_prithvi_final_run3.pth",
+    # "best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1.pth",
+    # "best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run2.pth",
+    # "best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run3.pth",
+    # "best_mIoU_iter_1000_minalerts_15000_prithvi_backscatter_final_run1.pth",
+    # "best_mIoU_iter_1000_minalerts_15000_prithvi_coherence_final_run1.pth"
+# "best_mIoU_iter_1000_minalerts_15000_prithvi_final_run1.pth"
+# "best_mIoU_iter_500_minalerts_10000_prithvi_final_run1_op.pth",
+# "best_mIoU_iter_400_minalerts_10000_prithvi_final_run2_op.pth",
+#     "best_mIoU_iter_500_minalerts_10000_prithvi_final_run3_op.pth",
+# "best_mIoU_iter_400_minalerts_10000_prithvi_final_run3_op.pth",
+# "best_mIoU_iter_300_minalerts_15000_prithvi_burnscars_final_run2_op.pth",
+# "best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run3_op.pth",
+#     "best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run2_op.pth",
+#     "best_mIoU_iter_500_minalerts_15000_prithvi_backscatter_final_run3_op.pth",
+# "best_mIoU_iter_400_minalerts_15000_prithvi_coherence_final_run2_op.pth",
+# "best_mIoU_iter_500_minalerts_15000_prithvi_coherence_final_run3_op.pth",
+# "best_mIoU_iter_400_minalerts_12500_prithvi_final_run2_op.pth",
+# "best_mIoU_iter_400_minalerts_12500_prithvi_final_run3_op.pth",
+# "best_mIoU_iter_500_minalerts_12500_prithvi_final_run4_op.pth"
+
+#################
+## run inference command
+#################
+
+#model_config_pairs = [
+
+# ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m_unet/best_mIoU_iter_900_minalerts_15000_unet_final_run1.pth", "forest_disturbances_config_unet.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1.pth", "forest_disturbances_config.py"),
+# ("Prithvi-100m_unet/best_mIoU_iter_1000_minalerts_15000_unet_final_run2.pth","forest_disturbances_config_unet.py"),
+# ("Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_10000_prithvi_burnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1.pth", "forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run3.pth", "forest_disturbances_config.py")
+# ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run1.pth", "forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run2.pth", "forest_disturbances_config.py")
+# ("Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run2.pth", "forest_disturbances_config_burnscars.py"),
+# ("Prithvi-100m_burnscars/best_mIoU_iter_900_minalerts_12500_prithvi_burnscars_final_run1.pth", "forest_disturbances_config_burnscars.py"),
+# ("Prithvi-100m/best_mIoU_iter_60_minalerts_15000_prithvi_final_run1.pth", "forest_disturbances_config.py")
+
+
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run1_op.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_400_minalerts_10000_prithvi_final_run2_op.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_10000_prithvi_final_run3_op.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run1_op.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_500_minalerts_15000_prithvi_final_run2_op.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m/best_mIoU_iter_400_minalerts_15000_prithvi_final_run3_op.pth","forest_disturbances_config.py"),
+# ("Prithvi-100m_burnscars/best_mIoU_iter_400_minalerts_15000_prithvi_burnscars_final_run1_op.pth","forest_disturbances_config_burnscars.py"),
+# ("Prithvi-100m_burnscars/best_mIoU_iter_300_minalerts_15000_prithvi_burnscars_final_run2_op.pth","forest_disturbances_config_burnscars.py"),
+# ("Prithvi-100m_burnscars/best_mIoU_iter_500_minalerts_15000_prithvi_burnscars_final_run3_op.pth","forest_disturbances_config_burnscars.py"),
+# ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run1_op.pth",  "forest_disturbances_config_unet.py"),
+#  ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run2_op.pth","forest_disturbances_config_unet.py"),
+#   ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_15000_unet_final_run3_op.pth", "forest_disturbances_config_unet.py"),
+#    ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run1_op.pth", "forest_disturbances_config_unet.py"),
+#     ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run2_op.pth", "forest_disturbances_config_unet.py"),
+# ("Prithvi-100m_unet/best_mIoU_iter_500_minalerts_10000_unet_final_run3_op.pth", "forest_disturbances_config_unet.py"),
+
+
+
 
 #################
 ## 2 sar model run input processor

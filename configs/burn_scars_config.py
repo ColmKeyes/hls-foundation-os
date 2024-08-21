@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 This configuration script sets up the parameters for running the Prithvi-100m model, specifically tailored for burn scar detection using Sentinel-2 imagery. Adapted from the original Prithvi model code.
 """

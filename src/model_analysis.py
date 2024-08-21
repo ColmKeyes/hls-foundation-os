@@ -1,6 +1,16 @@
-# model_analysis.py
 
-# model_analysis.py
+# -*- coding: utf-8 -*-
+"""
+Main model outputs to analise model performance metrics and visualise results with plots and confusion matrices.
+
+@Time    : 2/2024
+@Author  : Colm Keyes
+@Email   : keyesco@tcd.ie
+@File    : model_analysis.py
+"""
+
+
+
 
 import json
 import os
