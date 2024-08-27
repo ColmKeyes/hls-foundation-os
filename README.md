@@ -15,11 +15,11 @@
 
 ## Usage Instructions
 
-### Repo Structure
 
 ## Project Repository Structure
-
-## Project Repository Structure
+This project utilises a source-bin folder structure, with functions found in source and processing/analysis in bin. 
+Preprocessing steps are labelled file 1-3 for HLS and Sentienl-1 data. 
+Model run commands are found in the main project directory.
 
 - **bin/**: Main scripts for data preprocessing and analysis
   - **data_preprocessing_hls**:
