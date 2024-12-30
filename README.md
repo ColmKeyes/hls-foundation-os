@@ -2,10 +2,6 @@
 
 #### This project, undertaken as part of an internship with VITO Remote Sensing, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection, as well as the model's capacity to fine tune to unseen SAR and InSAR data.
 
-
-
-
-
 ## Overview
 ### This repository details the extension of the Prithvi-100m model, pre-trained on contiguous US data by teams at NASA and IBM. Thus much of the documentation below is kept from the original repo. Included in this research is model config, preprocessing and running and analysis of the Prithvi model along with a U-Net model used for comparison. 
 
@@ -13,6 +9,15 @@
 ### While the Prithvi model marginally outperformed a U-Net model for the task of forest disturbance detection, the performance of both models were limited by data quality. A significant result which appeared from this research was that the highest and second highest performing models were U-Net models utilising InSAR and SAR data respectively. This result is in agreement with research conducted on InSAR data in my MSc Thesis, which showed the potential of InSAR coherence measures for forest disturbance detection. 
 
 
+## Project Repository Structure
+This project utilises a source-bin folder structure, with functions found in source and processing/analysis in bin. 
+Preprocessing steps are labelled file 1-3 for HLS and Sentienl-1 data. 
+Model run commands are found in the main project directory.
+
+
+
+
+<!--
 ## Usage Instructions
 
 
@@ -66,6 +71,7 @@ Model run commands are found in the main project directory.
 - `run_test_command_unet.py`: Script for testing UNet model
 - `run_unet_model_command.py`: Script for running UNet model training
 - `PREVIOUSLY_USED_COMMANDS.txt`: Text file with previously used commands
+
 
 # Image segmentation by foundation model finetuning
 
@@ -165,3 +171,5 @@ If this repository helped your research, please cite `HLS foundation` in your pu
     year            = {2023}
 }
 ```
+
+-->
