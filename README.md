@@ -1,5 +1,5 @@
 # Prithvi-100m EO Foundation Model
-Foundation models are a paradigm shift in AI. These models, Pre-trained using data lakes and HPC(high performace computing) can be fine tuned to a variety of different applications. Here, we explore the application of one such model to forest disturbance detection. An understudied but vital application in the battle to reduce the effects of climate change.
+Foundation models are a paradigm shift in AI. These models, Pre-trained using data lakes and large compute capacities can be fine tuned to a variety of different applications. Here, we explore the application of one such model to forest disturbance detection. An understudied but vital application in the battle to reduce the effects of climate change.
 
 # AWS-Sagemaker Implementation
 Access to large compute capacity is required for pretraining foundation models. Tasks in sufficiently different locations require pretraining on new geographic areas or climate zones and can be prohibative without significant in-house processing capacity. Cloud processing has the necessary throughput for training new foundation models, albeit at a cost.     
