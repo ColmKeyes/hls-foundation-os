@@ -3,10 +3,29 @@
 #### This project, undertaken as part of an internship with VITO Remote Sensing, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection, as well as the model's capacity to fine tune to unseen SAR and InSAR data.
 
 ## Overview
-### This repository details the extension of the Prithvi-100m model, pre-trained on contiguous US data by teams at NASA and IBM. Thus much of the documentation below is kept from the original repo. Included in this research is model config, preprocessing and running and analysis of the Prithvi model along with a U-Net model used for comparison. 
+### This repository details the extension of the Prithvi-100m model, pre-trained on contiguous US data by teams at NASA and IBM. Thus much of the documentation below is kept from the original repo. Included in this research is model config, preprocessing and running and analysis of the Prithvi model along with a U-Net model used for comparison.
+
+<p align="center">
+  <img src="Methods Flow Chart.png" alt="Image Description" width="100%">
+</p>
+
 
 ## Results
 ### While the Prithvi model marginally outperformed a U-Net model for the task of forest disturbance detection, the performance of both models were limited by data quality. A significant result which appeared from this research was that the highest and second highest performing models were U-Net models utilising InSAR and SAR data respectively. This result is in agreement with research conducted on InSAR data in my MSc Thesis, which showed the potential of InSAR coherence measures for forest disturbance detection. 
+
+
+<p align="center">
+  <img src="Capture_prithvi_results.png" alt="Image Description" width="100%">
+</p>
+
+
+<p align="center">
+  <img src="2023076_T49MET_agb_radd_fmask_stack_512_512_comparison_Prithvi_backscatter.png" alt="Image Description" width="100%">
+</p>
+<p align="center">
+  <img src="2023076_T49MET_agb_radd_fmask_stack_512_512_comparison_prithvi_coherence" alt="Image Description" width="100%">
+</p>
+
 
 
 ## Project Repository Structure
