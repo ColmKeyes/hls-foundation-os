@@ -5,6 +5,7 @@
 ## Overview
 ### This repository details the extension of the Prithvi-100m model, pre-trained on contiguous US data by teams at NASA and IBM. Thus much of the documentation below is kept from the original repo. Included in this research is model config, preprocessing and running and analysis of the Prithvi model along with a U-Net model used for comparison.
 
+## Methods Flow Chart
 <p align="center">
   <img src="Methods Flow Chart.png" alt="Image Description" width="100%">
 </p>
@@ -13,17 +14,20 @@
 ## Results
 ### While the Prithvi model marginally outperformed a U-Net model for the task of forest disturbance detection, the performance of both models were limited by data quality. A significant result which appeared from this research was that the highest and second highest performing models were U-Net models utilising InSAR and SAR data respectively. This result is in agreement with research conducted on InSAR data in my MSc Thesis, which showed the potential of InSAR coherence measures for forest disturbance detection. 
 
-
+## Performance Metrics
+Performance evaluation results on unseen test data. Avg.: Average. Acc: Accuracy. mAcc: mean Accuracy mIoU: mean Intersection over Union.
 <p align="center">
-  <img src="Capture_prithvi_results.png" alt="Image Description" width="100%">
+  <img src="Capture_prithvi_results.PNG" alt="Image Description" width="100%">
 </p>
 
+## Example Outputs
 
+Below are sample comparison outputs between the prithvi model output and RADD alert labels, showing model inference on test data tile T49MDU, with input RGB, inference output, RADD labels, and confusion matrix map. 
 <p align="center">
   <img src="2023076_T49MET_agb_radd_fmask_stack_512_512_comparison_Prithvi_backscatter.png" alt="Image Description" width="100%">
 </p>
 <p align="center">
-  <img src="2023076_T49MET_agb_radd_fmask_stack_512_512_comparison_prithvi_coherence" alt="Image Description" width="100%">
+  <img src="2023076_T49MET_agb_radd_fmask_stack_512_512_comparison_prithvi_coherence.png" alt="Image Description" width="100%">
 </p>
 
 
