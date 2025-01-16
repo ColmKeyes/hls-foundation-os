@@ -1,6 +1,6 @@
 # Modifications for Forest Disturbance Detection
 
-#### This project, undertaken as part of an internship with VITO Remote Sensing, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection, as well as the model's capacity to fine tune to unseen SAR and InSAR data.
+#### This project, undertaken as part of an internship with VITO Remote Sensing, focuses on fine-tuning the Prithvi-100m model to determine its capabilities in forest disturbance detection, as well as the model's capacity to fine tune to unseen SAR and InSAR data. Writeup found under Internship____Colm_Keyes.pdf
 
 ## Overview
 ### This repository details the extension of the Prithvi-100m model, pre-trained on contiguous US data by teams at NASA and IBM. Thus much of the documentation below is kept from the original repo. Included in this research is model config, preprocessing and running and analysis of the Prithvi model along with a U-Net model used for comparison.
